@@ -5,7 +5,7 @@
   <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" media="screen and (min-width:700px)" href="css/styles-medium.css">
-  <link rel="stylesheet" media="screen and (min-width:800px)" href="css/styles-large.css">
+  <link rel="stylesheet" media="screen and (min-width:1200px)" href="css/styles-large.css">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Restaurant Reviews</title>
 </head>
@@ -20,10 +20,10 @@
 
   <main id="maincontent">
     <section id="map-container">
-      <div id="map"></div>
+      <div id="map" aria-hidden="true"></div>
     </section>
     <section>
-      <nav class="filter-options" id="filters">
+      <nav class="filter-options" id="filters" tabindex="-1">
         <h2>Filter Results</h2>
         <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
           <option value="all">All Neighborhoods</option>
@@ -50,53 +50,53 @@
 
                   console.log('new registration')
 
-                  if (!navigator.serviceWorker.controller) {
-                      return;
-                  }
-
-                  if (reg.waiting) {
-                      confirm('Refresh now?')
-                      console.log('first refershing');
-
-
-                  }
-
-                  if (reg.installing) {
-                      console.log('reg installing')
-                      serviceWorkerStateChange(reg.installing);
-                      return;
-                  }
-
-                  reg.addEventListener('updatefound', function() {
-                      console.log('reg update found')
-                      serviceWorkerStateChange(reg.installing);
-                  });
+                  // if (!navigator.serviceWorker.controller) {
+                  //     return;
+                  // }
+                  //
+                  // if (reg.waiting) {
+                  //     confirm('Refresh now?')
+                  //     console.log('first refershing');
+                  //
+                  //
+                  // }
+                  //
+                  // if (reg.installing) {
+                  //     console.log('reg installing')
+                  //     serviceWorkerStateChange(reg.installing);
+                  //     return;
+                  // }
+                  //
+                  // reg.addEventListener('updatefound', function() {
+                  //     console.log('reg update found')
+                  //     serviceWorkerStateChange(reg.installing);
+                  // });
 
               }).catch(function() {
               console.log("Service Worker Failed to Register")
           });
       }
 
-      serviceWorkerStateChange = function(worker) {
-          worker.addEventListener('statechange', function() {
-
-              if (worker.state == 'installed') {
-                  console.log('show window installed');
-                  if (confirm('Refresh now?')) {
-                      console.log(refreshing);
-                      if (refreshing) return;
-                      refreshing = true;
-                      console.log('secound refreshing');
-                      window.location.reload();
-                  }
-              }
-          })
-      }
-
-      window.onload = function () {
-          const iframe = document.querySelector('iframe');
-          iframe.title = "Google Maps";
-      }
+      // serviceWorkerStateChange = functio n(worker) {
+      //     worker.addEventListener('statechange', function() {
+      //
+      //         if (worker.state == 'installed') {
+      //             console.log('show window installed');
+      //             if (confirm('Refresh now?')) {
+      //                 console.log(refreshing);
+      //                 if (refreshing) return;
+      //                 refreshing = true;
+      //                 console.log('secound refreshing');
+      //                 window.location.reload();
+      //             }
+      //         }
+      //     })
+      // }
+      //
+      // window.onload = function () {
+      //     const iframe = document.querySelector('iframe');
+      //     iframe.title = "Google Maps";
+      // }
 
   </script>
 
