@@ -71,21 +71,17 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
+    let loc = {
+        lat: 40.722216,
+        lng: -73.987501
+    };
+    self.map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: loc,
+        scrollwheel: false
+    });
 
-    // var listener = self.map.addListener('tilesloaded', =>
-    document.getElementById('map').attr('tabindex', 999)
-    // google.maps.event.removeListener(listener))
-
-  updateRestaurants();
+    updateRestaurants();
 }
 
 /**
@@ -130,12 +126,12 @@ resetRestaurants = (restaurants) => {
  * Create all restaurants HTML and add them to the webpage.
  */
 fillRestaurantsHTML = (restaurants = self.restaurants) => {
-  const ul = document.getElementById('restaurants-list');
-  restaurants.forEach(restaurant => {
-    ul.append(createRestaurantHTML(restaurant));
-  });
-  addMarkersToMap();
-
+    const ul = document.getElementById('restaurants-list');
+    restaurants.forEach(restaurant => {
+        ul.append(createRestaurantHTML(restaurant));
+    });
+    addMarkersToMap();
+}
 /**
  * Create restaurant HTML.
  */
@@ -163,14 +159,13 @@ createRestaurantHTML = (restaurant) => {
 
   picture.append(sourceLarge);
 
-
   const image = document.createElement('img');
   image.className = 'restaurant-img';
   image.src = DBHelper.imageUrlForRestaurant(restaurant);
 
   picture.append(image);
 
-  const name = document.createElement('h1');
+  const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   image.alt = "Picture of restaurant with name " + restaurant.name;
   li.append(name);
