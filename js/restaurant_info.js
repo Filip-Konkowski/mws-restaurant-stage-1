@@ -131,6 +131,7 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
         return;
     }
     const ul = document.getElementById('reviews-list');
+    ul.setAttribute("aria-labelledby", title.innerHTML);
     reviews.forEach(review => {
         ul.appendChild(createReviewHTML(review));
     });
