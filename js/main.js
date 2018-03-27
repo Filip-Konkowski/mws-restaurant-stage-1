@@ -81,6 +81,19 @@ window.initMap = () => {
         scrollwheel: false
     });
 
+    var MAP = self.map;
+
+    google.maps.event.addListener(MAP, "tilesloaded", function(){
+        /* * / //Jquery
+        $("#map a").attr("tabindex","-1");
+        /*/ //No Jquery
+        [].slice.apply(document.querySelectorAll('#map a')).forEach(function(item) {
+          console.log(item)
+            item.removeAttribute('tabindex');
+        });
+        // */
+    })
+
     updateRestaurants();
 }
 
