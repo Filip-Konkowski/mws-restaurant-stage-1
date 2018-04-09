@@ -1,4 +1,10 @@
 var staticCacheName = 'mws-v1';
+var imageCacheName = 'mws-image';
+
+var allCaches = [
+    staticCacheName,
+    imageCacheName
+];
 
 self.addEventListener('install', function(event) {
 
@@ -9,54 +15,14 @@ self.addEventListener('install', function(event) {
                     'js/dbhelper.js',
                     'js/main.js',
                     'js/restaurant_info.js',
+                    'js/indexeddb.js',
                     'css/styles.css',
                     'css/styles-medium.css',
                     'css/styles-large.css',
-                    'img/1-800_large_1x.jpg',
-                    'img/1-1600_large_x2.jpg',
-                    'img/1-medium.jpg',
-                    'img/1-small.jpg',
-                    'img/2-800_large_1x.jpg',
-                    'img/2-1600_large_x2.jpg',
-                    'img/2-medium.jpg',
-                    'img/2-small.jpg',
-                    'img/3-800_large_1x.jpg',
-                    'img/3-1600_large_x2.jpg',
-                    'img/3-medium.jpg',
-                    'img/3-small.jpg',
-                    'img/4-800_large_1x.jpg',
-                    'img/4-1600_large_x2.jpg',
-                    'img/4-medium.jpg',
-                    'img/4-small.jpg',
-                    'img/5-800_large_1x.jpg',
-                    'img/5-1600_large_x2.jpg',
-                    'img/5-medium.jpg',
-                    'img/5-small.jpg',
-                    'img/6-800_large_1x.jpg',
-                    'img/6-1600_large_x2.jpg',
-                    'img/6-medium.jpg',
-                    'img/6-small.jpg',
-                    'img/7-800_large_1x.jpg',
-                    'img/7-1600_large_x2.jpg',
-                    'img/7-medium.jpg',
-                    'img/7-small.jpg',
-                    'img/8-800_large_1x.jpg',
-                    'img/8-1600_large_x2.jpg',
-                    'img/8-medium.jpg',
-                    'img/8-small.jpg',
-                    'img/9-800_large_1x.jpg',
-                    'img/9-1600_large_x2.jpg',
-                    'img/9-medium.jpg',
-                    'img/9-small.jpg',
-                    'img/10-800_large_1x.jpg',
-                    'img/10-1600_large_x2.jpg',
-                    'img/10-medium.jpg',
-                    'img/10-small.jpg',
                 ]);
         })
     );
 });
-
 
 
 self.addEventListener('activate', function(event) {
@@ -65,7 +31,7 @@ self.addEventListener('activate', function(event) {
             return Promise.all(
                 cacheNames.filter(function(cacheName) {
                     return cacheName.startsWith('mws-') &&
-                        cacheName != staticCacheName;
+                        !allCaches.includes(cacheName)
                 }).map(function(cacheName) {
                     return caches.delete(cacheName);
                 })
@@ -75,12 +41,40 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
+    var requestUrl = new URL(event.request.url);
+
+    if(requestUrl.pathname.startsWith("/img")) {
+        event.respondWith(servePhoto(event.request));
+        // console.log('serverPhoto');
+        return;
+    }
+
+    // console.log('requestUrl', requestUrl)
     event.respondWith(
         caches.match(event.request).then(function(response) {
+            // console.log('resonse from cache', response);
             if(response) return response;
+            // console.log('fetch event request', event.request);
             return fetch(event.request);
     })
     )
 });
 
+function servePhoto(request) {
 
+    var storageUrlRep = request.url.replace(/-\w+\.jpg$/, '');
+
+    return caches.open(imageCacheName).then(function(cache) {
+        return cache.match(storageUrlRep).then(function (response) {
+            // console.log('response',response);
+             if(response) return response;
+
+            return fetch(request).then(function(networkResponse) {
+                // console.log('networkResponse', networkResponse)
+                cache.put(storageUrlRep, networkResponse.clone());
+                return networkResponse
+            })
+        })
+    })
+
+}

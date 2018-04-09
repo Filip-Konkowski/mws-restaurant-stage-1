@@ -24,12 +24,26 @@ class DBHelper {
         .then(response => response.json())
         .then(data => {
             const restaurants = data;
+            console.log(restaurants)
+
+            idb = new IndexedDBHelper();
+            console.log('idb.idb',idb.idb)
+            objectStore = idb.open('mws', 1);
+
+            console.log('objectStore',objectStore)
             callback(null, restaurants);
         })
-        .catch(e => DBHelper.requestError(e));
+        .catch(function(e) {
+            DBHelper.requestError(e)
+        });
 
   }
     static requestError(e) {
+        idb = new IndexedDBHelper();
+        objectStore = idb.open('mws', 1);
+        console.log('custom IDB', idb)
+        console.log('objectstore', objectStore);
+
         console.log('fetch error: ', e);
   }
   /**
