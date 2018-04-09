@@ -2,6 +2,9 @@
 To install application run
  - npm install
  - grunt
+ - gulp
+
+Application is runnign on localhost:8080
 
 # Mobile Web Specialist Certification Course
 ---
