@@ -3,6 +3,7 @@
  */
 class DBHelper {
 
+
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
@@ -24,28 +25,71 @@ class DBHelper {
         .then(response => response.json())
         .then(data => {
             const restaurants = data;
-            console.log(restaurants)
 
-            idb = new IndexedDBHelper();
-            console.log('idb.idb',idb.idb)
-            objectStore = idb.open('mws', 1);
-
-            console.log('objectStore',objectStore)
-            callback(null, restaurants);
+            // DBHelper.putDataToIndexedDB(restaurants)
+            DBHelper.fetchFromIndexedDB()
+            console.log('fetch from IndexedDB resteurants', this.indexedDbResults)
+            callback(null, this.indexedDbResults)
+            // callback(null, restaurants);
         })
         .catch(function(e) {
+          if(e === 'TypeError: Failed to fetch') {
+            DBHelper.fetchFromIndexedDB()
+            console.log('fetch from IndexedDB resteurants', this.indexedDbResults)
+            callback(null, this.indexedDbResults)
+          }
             DBHelper.requestError(e)
         });
 
   }
-    static requestError(e) {
-        idb = new IndexedDBHelper();
-        objectStore = idb.open('mws', 1);
-        console.log('custom IDB', idb)
-        console.log('objectstore', objectStore);
+    static fetchFromIndexedDB() {
+        let indexDbHelper = window.indexedDB;
+        let request = indexDbHelper.open('mws', 4);
 
+        request.onsuccess = function(event) {
+            var db = event.target.result;
+            var transaction = db.transaction("mws-store");
+            var objectStore = transaction.objectStore("mws-store");
+            objectStore.getAll().onsuccess = function(event) {
+                this.indexedDbResults = event.target.result;
+                console.log('request result', this.indexedDbResults)
+            };
+        }
+
+        request.onerror = function() {
+          console.log('Unable to fetch from indexed DB')
+        }
+    }
+
+    static requestError(e) {
         console.log('fetch error: ', e);
   }
+
+  static putDataToIndexedDB(resteurants) {
+      let indexDbHelper = window.indexedDB;
+      let request = indexDbHelper.open('mws', 4);
+
+      request.onerror = function(event) {
+          console.log('IndexDB fails', event)
+      };
+
+      request.onupgradeneeded = function(event) {
+          let db = event.target.result;
+
+          let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
+          objectStore.createIndex('createdAt', 'createdAt', { unique: false })
+          objectStore.transaction.oncomplete = function(event) {
+              // Store values in the newly created objectStore.
+              let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
+              restaurants.forEach(function(restaurant) {
+                  resteurantsObjectStore.add(restaurant);
+              });
+          };
+
+          console.log('onupgradeneeded')
+      }
+  }
+
   /**
    * Fetch a restaurant by its ID.
    */
