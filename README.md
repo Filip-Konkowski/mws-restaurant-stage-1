@@ -4,6 +4,8 @@ To install application run
  - npm install
  - grunt
  - gulp
+ - npm i gulp-autoprefixer
+ - npm i gulp-sass
  - instal and run Local Development API Server
  
 Application is runnign on localhost:8080
