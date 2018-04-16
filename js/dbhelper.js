@@ -26,11 +26,9 @@ class DBHelper {
         .then(data => {
             const restaurants = data;
 
-            // DBHelper.putDataToIndexedDB(restaurants)
-            DBHelper.fetchFromIndexedDB()
-            console.log('fetch from IndexedDB resteurants', this.indexedDbResults)
-            callback(null, this.indexedDbResults)
-            // callback(null, restaurants);
+            DBHelper.putDataToIndexedDB(restaurants)
+
+            callback(null, restaurants);
         })
         .catch(function(e) {
           if(e === 'TypeError: Failed to fetch') {
