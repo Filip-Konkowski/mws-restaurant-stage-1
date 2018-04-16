@@ -1,6 +1,6 @@
-var sass = require('gulp-sass');
-var autoprefixer = require('gulp-autoprefixer')
-var gulp = require('gulp'),
+let sass = require('gulp-sass');
+let autoprefixer = require('gulp-autoprefixer');
+let gulp = require('gulp'),
     connect = require('gulp-connect');
 
 gulp.task('webserver', function() {
