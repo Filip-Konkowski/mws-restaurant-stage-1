@@ -26,44 +26,21 @@ class DBHelper {
         .then(data => {
             const restaurants = data;
 
-            DBHelper.putDataToIndexedDB(restaurants)
+            DBHelper.putDataToIndexedDB(restaurants);
 
             callback(null, restaurants);
         })
         .catch(function(e) {
-          if(e === 'TypeError: Failed to fetch') {
-            DBHelper.fetchFromIndexedDB()
-            console.log('fetch from IndexedDB resteurants', this.indexedDbResults)
-            callback(null, this.indexedDbResults)
-          }
             DBHelper.requestError(e)
         });
 
   }
-    static fetchFromIndexedDB() {
-        let indexDbHelper = window.indexedDB;
-        let request = indexDbHelper.open('mws', 4);
 
-        request.onsuccess = function(event) {
-            var db = event.target.result;
-            var transaction = db.transaction("mws-store");
-            var objectStore = transaction.objectStore("mws-store");
-            objectStore.getAll().onsuccess = function(event) {
-                this.indexedDbResults = event.target.result;
-                console.log('request result', this.indexedDbResults)
-            };
-        }
-
-        request.onerror = function() {
-          console.log('Unable to fetch from indexed DB')
-        }
-    }
-
-    static requestError(e) {
+  static requestError(e) {
         console.log('fetch error: ', e);
   }
 
-  static putDataToIndexedDB(resteurants) {
+  static putDataToIndexedDB() {
       let indexDbHelper = window.indexedDB;
       let request = indexDbHelper.open('mws', 4);
 

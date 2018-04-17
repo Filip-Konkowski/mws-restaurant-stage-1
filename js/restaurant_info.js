@@ -24,23 +24,39 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
+    console.log('self.restaurant', self.restaurant);
+
     if (self.restaurant) { // restaurant already fetched!
         callback(null, self.restaurant)
         return;
     }
     const id = getParameterByName('id');
+
     if (!id) { // no id found in URL
         error = 'No restaurant id in URL'
         callback(error, null);
     } else {
-        DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-            console.log('DBhelper fetch resteurants', restaurant)
+        let numericalRestaurantId = Number(id);
+        console.log('numericalRestaurantId', numericalRestaurantId)
+        IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
+            console.log('IndexDBHelper fetch resteurants', restaurant);
             self.restaurant = restaurant;
             if (!restaurant) {
 
-                console.error('DB fetch fails: ',error);
-                return;
+                console.error('IndexDBHelper fetch fails: ',error);
+
+                DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+                    console.log('DBhelper fetch resteurants', restaurant)
+                    self.restaurant = restaurant;
+                    if (!restaurant) {
+
+                        console.error('DB fetch fails: ',error);
+                        return;
+                    }
+
+                });
             }
+
             fillRestaurantHTML();
             callback(null, restaurant)
         });

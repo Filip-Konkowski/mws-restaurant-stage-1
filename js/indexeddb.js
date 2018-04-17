@@ -43,5 +43,40 @@ class IndexedDBHelper {
         });
 
     }
+
+    static fetchByIdFromIndexedDB(resteurantId, callback) {
+        let indexDbHelper = window.indexedDB;
+        let request = indexDbHelper.open('mws', 4);
+        console.log('typeof resteurantId',typeof resteurantId)
+        if(!this.isNumber(resteurantId)) {
+            console.log('IndexedDB fetch error. ResteurantId is not Number type');
+            return;
+        }
+
+        request.onsuccess = function(event) {
+            var db = event.target.result;
+            var transaction = db.transaction("mws-store");
+            var objectStore = transaction.objectStore("mws-store");
+            objectStore.get(resteurantId).onsuccess = function(event) {
+                restaurant = event.target.result;
+                this.indexedDbResults = restaurant;
+                console.log('request result', this.indexedDbResults)
+                if(restaurant) {
+                    callback(null, restaurant);
+                } else {
+                    callback('Restaurant does not exist', null);
+                }
+
+            };
+        }
+
+        request.onerror = function() {
+            console.log('Unable to fetch from indexed DB')
+        }
+    }
+
+    static isNumber(n) {
+        return !isNaN(parseFloat(n)) && !isNaN(n - 0)
+    }
 }
 
