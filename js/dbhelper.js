@@ -40,9 +40,14 @@ class DBHelper {
         console.log('fetch error: ', e);
   }
 
+  static removeIndexedDB() {
+      let indexDbHelper = window.indexedDB;
+      indexDbHelper.deleteDatabase('mws');
+  }
+
   static putDataToIndexedDB() {
       let indexDbHelper = window.indexedDB;
-      let request = indexDbHelper.open('mws', 4);
+      let request = indexDbHelper.open('mws', 1);
 
       request.onerror = function(event) {
           console.log('IndexDB fails', event)
@@ -52,6 +57,7 @@ class DBHelper {
           let db = event.target.result;
 
           let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
+          console.log('putDataToIndexedDB', objectStore)
           objectStore.createIndex('createdAt', 'createdAt', { unique: false })
           objectStore.transaction.oncomplete = function(event) {
               // Store values in the newly created objectStore.

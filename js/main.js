@@ -19,14 +19,17 @@ fetchNeighborhoods = () => {
 
     IndexedDBHelper.fetchNeighborhoods((error, neighborhoods) => {
         console.log('IndexDBHelper fetch neighborhoods', neighborhoods);
+        console.log('IndexDBHelper fetch neighborhoods error', error);
 
-        if (!neighborhoods) {
-            console.error('IndexDBHelper fetch fails: ', error);
+        if (error || neighborhoods.length === 0) {
+            // console.error('IndexDBHelper fetch neighborhoods.length: ', neighborhoods.length);
+            // console.error('IndexDBHelper fetch neighborhoods.error: ', error);
 
             DBHelper.fetchNeighborhoods((error, neighborhoods) => {
                 if (error) { // Got an error
                     console.error('database error: ', error);
                 } else {
+                  console.log('fetchNeighborhoods from API', neighborhoods)
                     self.neighborhoods = neighborhoods;
                     fillNeighborhoodsHTML();
                 }
@@ -59,13 +62,14 @@ fetchCuisines = () => {
     IndexedDBHelper.fetchCuisines((error, cuisines) => {
         console.log('IndexDBHelper fetch cuisines', cuisines);
 
-        if (!cuisines) {
-            console.error('IndexDBHelper fetch fails: ', error);
+        if (error || cuisines.length === 0) {
+            // console.error('IndexDBHelper fetch fetchCuisines: ', cuisines.length);
 
             DBHelper.fetchCuisines((error, cuisines) => {
                 if (error) { // Got an error!
                     console.error(error);
                 } else {
+                    console.log('fetchCuisines from API', cuisines)
                     self.cuisines = cuisines;
                     fillCuisinesHTML();
                 }
@@ -125,9 +129,11 @@ updateRestaurants = () => {
 
     IndexedDBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
         console.log('IndexDBHelper fetch cuisine', cuisine);
+        console.log('IndexDBHelper fetch neighborhood', neighborhood);
 
-        if (!cuisine || !neighborhood) {
-            console.error('IndexDBHelper fetch fails: ', error);
+
+        if (error || cuisine.length === 0 || neighborhood.length === 0) {
+            console.error('IndexDBHelper fetch fetchRestaurantByCuisineAndNeighborhood: ', error);
 
             DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
                 if (error) { // Got an error!

@@ -4,19 +4,16 @@ class IndexedDBHelper {
 
 
     constructor() {
-        this.idb = window.indexedDB;
-        if (!this.idb) {
+        if (!window.indexedDB) {
             console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
 
         }
 
     }
 
-    static openIdb(name, version = 1) {
-        this.nameDB = name;
-        this.versionDB = version;
+    static openIdb(name = DBNAME, version = 1) {
 
-        request = this.idb.open(name, version);
+        let request = window.indexedDB.open(name, version);
 
         request.onerror = function(event) {
             console.log("Database error: " + event.target.errorCode);
@@ -24,12 +21,11 @@ class IndexedDBHelper {
 
         request.onupgradeneeded = function(event) {
             let db = event.target.result;
-
+            console.log('onupgradeneeded', db)
             var objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
-
-            this.objectStore = objectStore;
-
         }
+
+        return request
     }
 
     static putData(data) {
@@ -48,17 +44,17 @@ class IndexedDBHelper {
 
     }
     static fetchAllFromIndexedDB(callback) {
-        let indexDbHelper = window.indexedDB;
         console.log('IndexedDBHelper.dbName', DBNAME);
-        let request = indexDbHelper.open(DBNAME, 4);
+        let request = IndexedDBHelper.openIdb();
         request.onsuccess = function(event) {
             let db = event.target.result;
             let transaction = db.transaction("mws-store");
             let objectStore = transaction.objectStore("mws-store");
             objectStore.getAll().onsuccess = function (event) {
-                restaurants = event.target.result;
+                let restaurants = event.target.result;
                 console.log('request result', restaurants)
-                if (restaurants) {
+                console.log('request length', restaurants.length)
+                if (restaurants.length !== 0) {
                     callback(null, restaurants);
                 } else {
                     callback('Restaurant does not exist', null);
@@ -112,13 +108,16 @@ class IndexedDBHelper {
 
     static fetchByIdFromIndexedDB(resteurantId, callback) {
         let indexDbHelper = window.indexedDB;
-        let request = indexDbHelper.open(DBNAME, 1);
+        console.log("constant DBNAME", DBNAME)
+        console.log("resteurantId", resteurantId)
+        let request = IndexedDBHelper.openIdb();
         if(!this.isNumber(resteurantId)) {
             console.log('IndexedDB fetch error. ResteurantId is not Number type');
             return;
         }
 
         request.onsuccess = function(event) {
+
             let db = event.target.result;
             let transaction = db.transaction("mws-store");
             let objectStore = transaction.objectStore("mws-store");
@@ -135,8 +134,8 @@ class IndexedDBHelper {
             };
         }
 
-        request.onerror = function() {
-            console.log('Unable to fetch from indexed DB')
+        request.onerror = function(event) {
+            console.log('Unable to fetch from indexed DB', event)
         }
     }
 
@@ -146,6 +145,11 @@ class IndexedDBHelper {
     static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
         // Fetch all restaurants
         IndexedDBHelper.fetchAllFromIndexedDB((error, restaurants) => {
+            console.log('fetchRestaurantByCuisineAndNeighborhood', restaurants)
+            // if(restaurants.length === 0) {
+            //     callback('Indexed database not f')
+            // }
+
             if (error) {
                 callback(error, null);
             } else {
