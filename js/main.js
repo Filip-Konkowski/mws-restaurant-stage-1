@@ -56,7 +56,6 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 fetchCuisines = () => {
-
     IndexedDBHelper.fetchCuisines((error, cuisines) => {
         console.log('IndexDBHelper fetch cuisines', cuisines);
 
@@ -76,12 +75,6 @@ fetchCuisines = () => {
             fillCuisinesHTML();
         }
     });
-
-
-
-
-
-
 }
 
 /**
@@ -128,14 +121,36 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
-    }
-  })
+
+
+    IndexedDBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
+        console.log('IndexDBHelper fetch cuisine', cuisine);
+
+        if (!cuisine || !neighborhood) {
+            console.error('IndexDBHelper fetch fails: ', error);
+
+            DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
+                if (error) { // Got an error!
+                    console.error(error);
+                } else {
+                    resetRestaurants(restaurants);
+                    fillRestaurantsHTML();
+                }
+            });
+        } else {
+            resetRestaurants(restaurants);
+            fillRestaurantsHTML();
+        }
+    });
+
+  // DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
+  //   if (error) { // Got an error!
+  //     console.error(error);
+  //   } else {
+  //     resetRestaurants(restaurants);
+  //     fillRestaurantsHTML();
+  //   }
+  // })
 }
 
 /**
