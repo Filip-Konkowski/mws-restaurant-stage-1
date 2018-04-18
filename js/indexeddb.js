@@ -1,4 +1,8 @@
+const DBNAME = 'mws';
+
 class IndexedDBHelper {
+
+
     constructor() {
         this.idb = window.indexedDB;
         if (!this.idb) {
@@ -43,20 +47,81 @@ class IndexedDBHelper {
         });
 
     }
+    static fetchAllFromIndexedDB(callback) {
+        let indexDbHelper = window.indexedDB;
+        console.log('IndexedDBHelper.dbName', DBNAME);
+        let request = indexDbHelper.open(DBNAME, 4);
+        request.onsuccess = function(event) {
+            let db = event.target.result;
+            let transaction = db.transaction("mws-store");
+            let objectStore = transaction.objectStore("mws-store");
+            objectStore.getAll().onsuccess = function (event) {
+                restaurants = event.target.result;
+                console.log('request result', restaurants)
+                if (restaurants) {
+                    callback(null, restaurants);
+                } else {
+                    callback('Restaurant does not exist', null);
+                }
+
+            }
+
+        };
+
+        request.onerror = function() {
+            console.log('Unable to fetch from indexed DB')
+        };
+    }
+
+
+    /**
+     * Fetch all neighborhoods with proper error handling.
+     */
+    static fetchNeighborhoods(callback) {
+        // Fetch all restaurants
+        IndexedDBHelper.fetchAllFromIndexedDB((error, restaurants) => {
+            if (error) {
+                callback(error, null);
+            } else {
+                // Get all neighborhoods from all restaurants
+                const neighborhoods = restaurants.map((v, i) => restaurants[i].neighborhood)
+                // Remove duplicates from neighborhoods
+                const uniqueNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i)
+                callback(null, uniqueNeighborhoods);
+            }
+        });
+    }
+
+    /**
+     * Fetch all cuisines with proper error handling.
+     */
+    static fetchCuisines(callback) {
+        // Fetch all restaurants
+        IndexedDBHelper.fetchAllFromIndexedDB((error, restaurants) => {
+            if (error) {
+                callback(error, null);
+            } else {
+                // Get all cuisines from all restaurants
+                const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type)
+                // Remove duplicates from cuisines
+                const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i)
+                callback(null, uniqueCuisines);
+            }
+        });
+    }
 
     static fetchByIdFromIndexedDB(resteurantId, callback) {
         let indexDbHelper = window.indexedDB;
-        let request = indexDbHelper.open('mws', 4);
-        console.log('typeof resteurantId',typeof resteurantId)
+        let request = indexDbHelper.open(DBNAME, 1);
         if(!this.isNumber(resteurantId)) {
             console.log('IndexedDB fetch error. ResteurantId is not Number type');
             return;
         }
 
         request.onsuccess = function(event) {
-            var db = event.target.result;
-            var transaction = db.transaction("mws-store");
-            var objectStore = transaction.objectStore("mws-store");
+            let db = event.target.result;
+            let transaction = db.transaction("mws-store");
+            let objectStore = transaction.objectStore("mws-store");
             objectStore.get(resteurantId).onsuccess = function(event) {
                 restaurant = event.target.result;
                 this.indexedDbResults = restaurant;

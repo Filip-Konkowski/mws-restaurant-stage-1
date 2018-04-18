@@ -16,14 +16,27 @@ document.addEventListener('DOMContentLoaded', (event) => {
  * Fetch all neighborhoods and set their HTML.
  */
 fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
-      console.error('database error: ', error);
-    } else {
-      self.neighborhoods = neighborhoods;
-      fillNeighborhoodsHTML();
-    }
-  });
+
+    IndexedDBHelper.fetchNeighborhoods((error, neighborhoods) => {
+        console.log('IndexDBHelper fetch neighborhoods', neighborhoods);
+
+        if (!neighborhoods) {
+            console.error('IndexDBHelper fetch fails: ', error);
+
+            DBHelper.fetchNeighborhoods((error, neighborhoods) => {
+                if (error) { // Got an error
+                    console.error('database error: ', error);
+                } else {
+                    self.neighborhoods = neighborhoods;
+                    fillNeighborhoodsHTML();
+                }
+            });
+        } else {
+            self.neighborhoods = neighborhoods;
+            fillNeighborhoodsHTML();
+        }
+
+    });
 }
 
 /**
@@ -43,14 +56,32 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 fetchCuisines = () => {
-  DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.cuisines = cuisines;
-      fillCuisinesHTML();
-    }
-  });
+
+    IndexedDBHelper.fetchCuisines((error, cuisines) => {
+        console.log('IndexDBHelper fetch cuisines', cuisines);
+
+        if (!cuisines) {
+            console.error('IndexDBHelper fetch fails: ', error);
+
+            DBHelper.fetchCuisines((error, cuisines) => {
+                if (error) { // Got an error!
+                    console.error(error);
+                } else {
+                    self.cuisines = cuisines;
+                    fillCuisinesHTML();
+                }
+            });
+        } else {
+            self.cuisines = cuisines;
+            fillCuisinesHTML();
+        }
+    });
+
+
+
+
+
+
 }
 
 /**

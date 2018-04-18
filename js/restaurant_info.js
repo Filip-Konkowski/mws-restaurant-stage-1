@@ -37,30 +37,33 @@ fetchRestaurantFromURL = (callback) => {
         callback(error, null);
     } else {
         let numericalRestaurantId = Number(id);
-        console.log('numericalRestaurantId', numericalRestaurantId)
-        IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
-            console.log('IndexDBHelper fetch resteurants', restaurant);
-            self.restaurant = restaurant;
-            if (!restaurant) {
-
-                console.error('IndexDBHelper fetch fails: ',error);
-
-                DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-                    console.log('DBhelper fetch resteurants', restaurant)
-                    self.restaurant = restaurant;
-                    if (!restaurant) {
-
-                        console.error('DB fetch fails: ',error);
-                        return;
-                    }
-
-                });
-            }
-
-            fillRestaurantHTML();
-            callback(null, restaurant)
-        });
+        fetchFromIndexOrAPIDataBase(numericalRestaurantId)
     }
+}
+
+fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
+    IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
+        console.log('IndexDBHelper fetch resteurants', restaurant);
+        self.restaurant = restaurant;
+        if (!restaurant) {
+
+            console.error('IndexDBHelper fetch fails: ',error);
+
+            DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+                console.log('DBhelper fetch resteurants', restaurant)
+                self.restaurant = restaurant;
+                if (!restaurant) {
+
+                    console.error('DB fetch fails: ',error);
+                    return;
+                }
+
+            });
+        }
+
+        fillRestaurantHTML();
+        callback(null, restaurant)
+    });
 }
 
 /**
