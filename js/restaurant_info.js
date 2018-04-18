@@ -46,21 +46,16 @@ fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
         console.log('IndexDBHelper fetch resteurants', restaurant);
         self.restaurant = restaurant;
         if (!restaurant) {
-
             console.error('IndexDBHelper fetch fails: ',error);
-
             DBHelper.fetchRestaurantById(id, (error, restaurant) => {
                 console.log('DBhelper fetch resteurants', restaurant)
                 self.restaurant = restaurant;
                 if (!restaurant) {
-
                     console.error('DB fetch fails: ',error);
                     return;
                 }
-
             });
         }
-
         fillRestaurantHTML();
         callback(null, restaurant)
     });
