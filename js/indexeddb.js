@@ -29,58 +29,16 @@ class IndexedDBHelper {
     }
 
     static putData(data) {
-
-
-        // let indexDbHelper = window.indexedDB;
-        // let request = indexDbHelper.open('mws', 1);
-        //
-        // request.onerror = function(event) {
-        //     console.log('IndexDB fails', event)
-        // };
-
         let request = IndexedDBHelper.openIdb();
 
         request.onsuccess = function(event) {
             let db = event.target.result;
-            console.log('putData on success with data: ', data)
-            // let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
-            db.transaction.oncomplete = function (event) {
-                // Store values in the newly created objectStore.
-                let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
-                data.forEach(function (restaurant) {
-                    resteurantsObjectStore.add(restaurant);
-                });
-            };
+            // Store values in the newly created objectStore.
+            let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
+            data.forEach(function (restaurant) {
+                resteurantsObjectStore.add(restaurant);
+            });
         }
-
-        // request.onupgradeneeded = function(event) {
-        //     let db = event.target.result;
-        //
-        //     let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
-        //     console.log('putDataToIndexedDB', objectStore)
-        //     objectStore.createIndex('createdAt', 'createdAt', {unique: false})
-        //     objectStore.transaction.oncomplete = function (event) {
-        //         // Store values in the newly created objectStore.
-        //         let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
-        //         data.forEach(function (restaurant) {
-        //             resteurantsObjectStore.add(restaurant);
-        //         });
-        //     };
-        // }
-
-            // this.objectStore.transaction.oncomplete = function (event) {
-            //     db.transaction('mws-store', 'readwrite').objectStore('mws-store');
-            //
-            // }
-            //
-            //
-            // var tx = db.transaction('wittrs', 'readwrite');
-            // var store = tx.objectStore('wittrs');
-            // messages.forEach(function(message) {
-            //     store.put(message);
-            // });
-
-
     }
 
     static fetchAllFromIndexedDB(callback) {
