@@ -44,9 +44,9 @@ fetchRestaurantFromURL = (callback) => {
 fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
     IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
         console.log('IndexDBHelper fetch resteurants', restaurant);
-        if (!restaurant || restaurant.length === 0) {
+        if (error || restaurant.length === 0) {
             console.error('IndexDBHelper fetch fails: ',error);
-            DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+            DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
                 console.log('DBhelper fetch resteurants', restaurant)
                 self.restaurant = restaurant;
                 if (!restaurant) {
