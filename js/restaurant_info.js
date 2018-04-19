@@ -47,20 +47,20 @@ fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
         if (error || restaurant.length === 0) {
             console.error('IndexDBHelper fetch fails: ',error);
             DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
-                console.log('DBhelper fetch resteurants', restaurant)
-                self.restaurant = restaurant;
-                if (!restaurant) {
+                console.log('DBhelper fetch API resteurants', restaurant)
+                if (!restaurant || error) {
                     console.error('DB fetch fails: ',error);
                     return;
                 } else {
-                    fillRestaurantHTML();
+                    fillRestaurantHTML(restaurant);
                     callback(null, restaurant)
                 }
             });
         } else {
-            fillRestaurantHTML();
+            fillRestaurantHTML(restaurant);
             callback(null, restaurant)
         }
+
     });
 }
 
@@ -68,6 +68,7 @@ fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
+    console.log('fillRestaurantHTML', restaurant)
     const name = document.getElementById('restaurant-name');
     name.innerHTML = restaurant.name;
     name.tabIndex = 1;

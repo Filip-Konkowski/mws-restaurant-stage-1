@@ -26,7 +26,8 @@ class DBHelper {
         .then(data => {
             const restaurants = data;
             console.log('Data from API: ', data)
-            DBHelper.putDataToIndexedDB(restaurants);
+            IndexedDBHelper.putData(restaurants);
+            console.log('Data from API afet indexed DB: ', restaurants)
 
             callback(null, restaurants);
         })
