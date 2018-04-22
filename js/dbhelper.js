@@ -3,6 +3,7 @@
  */
 class DBHelper {
 
+
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
@@ -24,6 +25,10 @@ class DBHelper {
         .then(response => response.json())
         .then(data => {
             const restaurants = data;
+            console.log('Data from API: ', data)
+            IndexedDBHelper.putData(restaurants);
+            console.log('Data from API afet indexed DB: ', restaurants)
+
             callback(null, restaurants);
         })
         .catch(function(e) {
@@ -31,9 +36,42 @@ class DBHelper {
         });
 
   }
-    static requestError(e) {
+
+  static requestError(e) {
         console.log('fetch error: ', e);
   }
+
+  static removeIndexedDB() {
+      let indexDbHelper = window.indexedDB;
+      indexDbHelper.deleteDatabase('mws');
+  }
+
+  static putDataToIndexedDB() {
+      let indexDbHelper = window.indexedDB;
+      let request = indexDbHelper.open('mws', 1);
+
+      request.onerror = function(event) {
+          console.log('IndexDB fails', event)
+      };
+
+      request.onupgradeneeded = function(event) {
+          let db = event.target.result;
+
+          let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
+          console.log('putDataToIndexedDB', objectStore)
+          objectStore.createIndex('createdAt', 'createdAt', { unique: false })
+          objectStore.transaction.oncomplete = function(event) {
+              // Store values in the newly created objectStore.
+              let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
+              restaurants.forEach(function(restaurant) {
+                  resteurantsObjectStore.add(restaurant);
+              });
+          };
+
+          console.log('onupgradeneeded')
+      }
+  }
+
   /**
    * Fetch a restaurant by its ID.
    */

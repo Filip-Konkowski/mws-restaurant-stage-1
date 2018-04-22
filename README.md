@@ -1,6 +1,6 @@
 
 # Installation
-To install application run
+To install application run commands
  - npm install
  - grunt
  - gulp
