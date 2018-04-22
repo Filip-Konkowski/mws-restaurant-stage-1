@@ -1,11 +1,20 @@
 let restaurant;
 var map;
+let isOffline;
+
+/**
+ * Fetch neighborhoods and cuisines as soon as the page is loaded.
+ */
+document.addEventListener('DOMContentLoaded', (event) => {
+    fetchRestaurantFromURL();
+});
 
 /**
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
     fetchRestaurantFromURL((error, restaurant) => {
+        fillBreadcrumb(restaurant);
         if (error) { // Got an error!
             console.error(error);
         } else {
@@ -14,8 +23,7 @@ window.initMap = () => {
                 center: restaurant.latlng,
                 scrollwheel: false
             });
-            fillBreadcrumb();
-            DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+            DBHelper.mapMarkerForRestaurant(restaurant, self.map);
         }
     });
 }
@@ -24,7 +32,7 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-    console.log('self.restaurant', self.restaurant);
+    // console.log('self.restaurant', self.restaurant);
 
     if (self.restaurant) { // restaurant already fetched!
         callback(null, self.restaurant)
@@ -37,35 +45,39 @@ fetchRestaurantFromURL = (callback) => {
         callback(error, null);
     } else {
         let numericalRestaurantId = Number(id);
-        fetchFromIndexOrAPIDataBase(numericalRestaurantId)
-    }
-}
+        // fetchFromIndexOrAPIDataBase(numericalRestaurantId)
 
-fetchFromIndexOrAPIDataBase = (numericalRestaurantId) => {
-    if (self.restaurant) { // restaurant already fetched!
-        callback(null, self.restaurant)
-        return;
-    }
-    IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
-        console.log('IndexDBHelper fetch resteurants', restaurant);
-        if (error || restaurant.length === 0) {
-            console.error('IndexDBHelper fetch fails: ',error);
-            DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
-                console.log('DBhelper fetch API resteurants', restaurant)
-                if (!restaurant || error) {
-                    console.error('DB fetch fails: ',error);
-                    return;
-                } else {
-                    fillRestaurantHTML(restaurant);
-                    callback(null, restaurant)
-                }
-            });
-        } else {
-            fillRestaurantHTML(restaurant);
-            callback(null, restaurant)
+        if (self.restaurant) { // restaurant already fetched!
+            callback(null, self.restaurant)
+            return;
         }
+        IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
+            // console.log('IndexDBHelper fetch resteurants', restaurant);
+            if (error || restaurant.length === 0) {
+                console.error('IndexDBHelper fetch fails: ',error);
+                DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
+                    // console.log('DBhelper fetch API resteurants', restaurant)
+                    if (!restaurant || error) {
+                        console.error('DB fetch fails: ',error);
+                        return callback(error, null)
 
-    });
+                    } else {
+                        // console.log('DBHelper.fetchRestaurantById succeed', restaurant)
+                        self.isOffline = false;
+                        fillRestaurantHTML(restaurant);
+                        return callback(null, restaurant)
+                    }
+                });
+            } else {
+                // console.log('IndexedDBHelper.fetchByIdFromIndexedDB succeed', restaurant)
+                self.isOffline = true;
+                fillRestaurantHTML(restaurant);
+                return callback(null, restaurant)
+            }
+
+        });
+
+    }
 }
 
 /**
@@ -113,10 +125,10 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 
     // fill operating hours
     if (restaurant.operating_hours) {
-        fillRestaurantHoursHTML();
+        fillRestaurantHoursHTML(restaurant.operating_hours);
     }
     // fill reviews
-    fillReviewsHTML();
+    fillReviewsHTML(restaurant.reviews);
 }
 
 /**

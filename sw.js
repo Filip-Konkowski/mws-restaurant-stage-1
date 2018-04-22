@@ -1,5 +1,5 @@
-var staticCacheName = 'mws-v1';
-var imageCacheName = 'mws-image';
+const staticCacheName = 'mws-v1';
+const imageCacheName = 'mws-image';
 
 var allCaches = [
     staticCacheName,
@@ -45,19 +45,14 @@ self.addEventListener('fetch', function(event) {
 
     if(requestUrl.pathname.startsWith("/img")) {
         event.respondWith(servePhoto(event.request));
-        // console.log('serverPhoto');
         return;
     }
 
-    // console.log('requestUrl', requestUrl)
     event.respondWith(
         caches.match(event.request).then(function(response) {
-            // console.log('resonse from cache', response);
-            if(response) return response;
-            // console.log('fetch event request', event.request);
-            return fetch(event.request);
-    })
-    )
+            return response || fetch(event.request).catch(function(error) {console.error('cached: ',error)});
+        })
+    );
 });
 
 function servePhoto(request) {
@@ -76,5 +71,4 @@ function servePhoto(request) {
             })
         })
     })
-
 }

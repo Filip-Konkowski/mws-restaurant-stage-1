@@ -42,7 +42,7 @@ class IndexedDBHelper {
     }
 
     static fetchAllFromIndexedDB(callback) {
-        console.log('IndexedDBHelper.dbName', DBNAME);
+        // console.log('IndexedDBHelper.dbName', DBNAME);
         let request = IndexedDBHelper.openIdb();
         request.onsuccess = function(event) {
             let db = event.target.result;
@@ -50,8 +50,8 @@ class IndexedDBHelper {
             let objectStore = transaction.objectStore("mws-store");
             objectStore.getAll().onsuccess = function (event) {
                 let restaurants = event.target.result;
-                console.log('request result', restaurants)
-                console.log('request length', restaurants.length)
+                // console.log('request result', restaurants)
+                // console.log('request length', restaurants.length)
                 if (restaurants.length !== 0) {
                     callback(null, restaurants);
                 } else {
@@ -105,9 +105,9 @@ class IndexedDBHelper {
     }
 
     static fetchByIdFromIndexedDB(resteurantId, callback) {
-        let indexDbHelper = window.indexedDB;
-        console.log("constant DBNAME", DBNAME)
-        console.log("resteurantId", resteurantId)
+
+        // console.log("constant DBNAME", DBNAME)
+        // console.log("resteurantId", resteurantId)
         let request = IndexedDBHelper.openIdb();
         if(!this.isNumber(resteurantId)) {
             console.log('IndexedDB fetch error. ResteurantId is not Number type');
@@ -122,11 +122,11 @@ class IndexedDBHelper {
             objectStore.get(resteurantId).onsuccess = function(event) {
                 restaurant = event.target.result;
                 this.indexedDbResults = restaurant;
-                console.log('request result', this.indexedDbResults)
+                // console.log('request result', this.indexedDbResults)
                 if(restaurant) {
-                    callback(null, restaurant);
+                    return callback(null, restaurant);
                 } else {
-                    callback('Restaurant does not exist', null);
+                    return callback('Restaurant does not exist', null);
                 }
 
             };
@@ -143,7 +143,7 @@ class IndexedDBHelper {
     static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
         // Fetch all restaurants
         IndexedDBHelper.fetchAllFromIndexedDB((error, restaurants) => {
-            console.log('fetchRestaurantByCuisineAndNeighborhood', restaurants)
+            // console.log('fetchRestaurantByCuisineAndNeighborhood', restaurants)
             // if(restaurants.length === 0) {
             //     callback('Indexed database not f')
             // }

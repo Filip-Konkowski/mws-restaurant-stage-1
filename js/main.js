@@ -53,6 +53,9 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
     option.value = neighborhood;
     select.append(option);
   });
+  let label = document.createElement("label");
+  label.innerHTML = 'Neighborhoods selection box';
+  select.insertBefore(label, select.firstChild);
 }
 
 /**
@@ -242,6 +245,7 @@ createRestaurantHTML = (restaurant) => {
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
+    console.log('Try addMarkersToMap')
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
