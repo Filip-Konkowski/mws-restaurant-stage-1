@@ -1,10 +1,10 @@
 
 # Installation
-To install application run
+To install application run commands
  - npm install
  - grunt
  - gulp
- - instal and run Local Development API Server
+ - install and run Local Development API Server
  
 Application is runnign on localhost:8080
 
