@@ -1,5 +1,8 @@
-let sass = require('gulp-sass');
-let autoprefixer = require('gulp-autoprefixer');
+const sass = require('gulp-sass');
+const autoprefixer = require('gulp-autoprefixer');
+const imagemin = require('gulp-imagemin');
+const imageminPngquant = require('imagemin-pngquant');
+
 let gulp = require('gulp'),
     connect = require('gulp-connect');
 
@@ -16,4 +19,13 @@ gulp.task('styles', function() {
             browsers: ['last 2 versions']
         }))
         .pipe(gulp.dest('./css'))
+});
+
+gulp.task('image', function() {
+   gulp.src('img/*.jpg')
+       .pipe(imagemin({
+           progressive: true,
+           use: [imageminPngquant()]
+       }))
+       .pipe(gulp.dest('disk/images'))
 });
