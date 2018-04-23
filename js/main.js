@@ -16,15 +16,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
  * Fetch all neighborhoods and set their HTML.
  */
 fetchNeighborhoods = () => {
-
     IndexedDBHelper.fetchNeighborhoods((error, neighborhoods) => {
-        console.log('IndexDBHelper fetch neighborhoods', neighborhoods);
-        console.log('IndexDBHelper fetch neighborhoods error', error);
-
         if (error || neighborhoods.length === 0) {
-            // console.error('IndexDBHelper fetch neighborhoods.length: ', neighborhoods.length);
-            // console.error('IndexDBHelper fetch neighborhoods.error: ', error);
-
             DBHelper.fetchNeighborhoods((error, neighborhoods) => {
                 if (error) { // Got an error
                     console.error('database error: ', error);
@@ -38,7 +31,6 @@ fetchNeighborhoods = () => {
             self.neighborhoods = neighborhoods;
             fillNeighborhoodsHTML();
         }
-
     });
 }
 
@@ -53,9 +45,6 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
     option.value = neighborhood;
     select.append(option);
   });
-  let label = document.createElement("label");
-  label.innerHTML = 'Neighborhoods selection box';
-  select.insertBefore(label, select.firstChild);
 }
 
 /**
@@ -63,16 +52,12 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  */
 fetchCuisines = () => {
     IndexedDBHelper.fetchCuisines((error, cuisines) => {
-        console.log('IndexDBHelper fetch cuisines', cuisines);
-
         if (error || cuisines.length === 0) {
-            // console.error('IndexDBHelper fetch fetchCuisines: ', cuisines.length);
-
+            console.log('IndexDBHelper fetch fetchCuisines: ', cuisines.length);
             DBHelper.fetchCuisines((error, cuisines) => {
                 if (error) { // Got an error!
                     console.error(error);
                 } else {
-                    console.log('fetchCuisines from API', cuisines)
                     self.cuisines = cuisines;
                     fillCuisinesHTML();
                 }
@@ -128,16 +113,9 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-
-
     IndexedDBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-        console.log('IndexDBHelper fetch cuisine', cuisine);
-        console.log('IndexDBHelper fetch neighborhood', neighborhood);
-
-
         if (error || cuisine.length === 0 || neighborhood.length === 0) {
-            console.error('IndexDBHelper fetch fetchRestaurantByCuisineAndNeighborhood: ', error);
-
+            console.log('IndexDBHelper fetch fetchRestaurantByCuisineAndNeighborhood: ', error);
             DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
                 if (error) { // Got an error!
                     console.error(error);
@@ -151,15 +129,17 @@ updateRestaurants = () => {
             fillRestaurantsHTML();
         }
     });
+}
 
-  // DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-  //   if (error) { // Got an error!
-  //     console.error(error);
-  //   } else {
-  //     resetRestaurants(restaurants);
-  //     fillRestaurantsHTML();
-  //   }
-  // })
+/**
+ * Create all restaurants HTML and add them to the webpage.
+ */
+fillRestaurantsHTML = (restaurants = self.restaurants) => {
+    const ul = document.getElementById('restaurants-list');
+    restaurants.forEach(restaurant => {
+        ul.append(createRestaurantHTML(restaurant));
+    });
+    addMarkersToMap();
 }
 
 /**
@@ -175,17 +155,6 @@ resetRestaurants = (restaurants) => {
   self.markers.forEach(m => m.setMap(null));
   self.markers = [];
   self.restaurants = restaurants;
-}
-
-/**
- * Create all restaurants HTML and add them to the webpage.
- */
-fillRestaurantsHTML = (restaurants = self.restaurants) => {
-    const ul = document.getElementById('restaurants-list');
-    restaurants.forEach(restaurant => {
-        ul.append(createRestaurantHTML(restaurant));
-    });
-    addMarkersToMap();
 }
 /**
  * Create restaurant HTML.
@@ -245,7 +214,6 @@ createRestaurantHTML = (restaurant) => {
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
-    console.log('Try addMarkersToMap')
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);

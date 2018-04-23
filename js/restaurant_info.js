@@ -32,8 +32,6 @@ window.initMap = () => {
  * Get current restaurant from page URL.
  */
 fetchRestaurantFromURL = (callback) => {
-    // console.log('self.restaurant', self.restaurant);
-
     if (self.restaurant) { // restaurant already fetched!
         callback(null, self.restaurant)
         return;
@@ -45,31 +43,26 @@ fetchRestaurantFromURL = (callback) => {
         callback(error, null);
     } else {
         let numericalRestaurantId = Number(id);
-        // fetchFromIndexOrAPIDataBase(numericalRestaurantId)
 
         if (self.restaurant) { // restaurant already fetched!
             callback(null, self.restaurant)
             return;
         }
         IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
-            // console.log('IndexDBHelper fetch resteurants', restaurant);
             if (error || restaurant.length === 0) {
                 console.error('IndexDBHelper fetch fails: ',error);
                 DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
-                    // console.log('DBhelper fetch API resteurants', restaurant)
                     if (!restaurant || error) {
                         console.error('DB fetch fails: ',error);
                         return callback(error, null)
 
                     } else {
-                        // console.log('DBHelper.fetchRestaurantById succeed', restaurant)
                         self.isOffline = false;
                         fillRestaurantHTML(restaurant);
                         return callback(null, restaurant)
                     }
                 });
             } else {
-                // console.log('IndexedDBHelper.fetchByIdFromIndexedDB succeed', restaurant)
                 self.isOffline = true;
                 fillRestaurantHTML(restaurant);
                 return callback(null, restaurant)

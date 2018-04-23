@@ -25,10 +25,7 @@ class DBHelper {
         .then(response => response.json())
         .then(data => {
             const restaurants = data;
-            console.log('Data from API: ', data)
             IndexedDBHelper.putData(restaurants);
-            console.log('Data from API afet indexed DB: ', restaurants)
-
             callback(null, restaurants);
         })
         .catch(function(e) {
@@ -51,14 +48,13 @@ class DBHelper {
       let request = indexDbHelper.open('mws', 1);
 
       request.onerror = function(event) {
-          console.log('IndexDB fails', event)
+          console.error('IndexDB fails', event)
       };
 
       request.onupgradeneeded = function(event) {
           let db = event.target.result;
 
           let objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
-          console.log('putDataToIndexedDB', objectStore)
           objectStore.createIndex('createdAt', 'createdAt', { unique: false })
           objectStore.transaction.oncomplete = function(event) {
               // Store values in the newly created objectStore.
