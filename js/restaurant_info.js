@@ -129,6 +129,11 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
  */
 fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
     const hours = document.getElementById('restaurant-hours');
+
+    if(hours.getElementsByTagName('tr').length > 0) {
+        return;
+    }
+
     for (let key in operatingHours) {
         const row = document.createElement('tr');
 
@@ -149,6 +154,11 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     const container = document.getElementById('reviews-container');
+
+    if(container.getElementsByTagName('h3').length > 0) {
+        return;
+    }
+
     const title = document.createElement('h3');
     title.innerHTML = 'Reviews';
     container.appendChild(title);
