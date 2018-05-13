@@ -1,6 +1,7 @@
 let restaurant;
 var map;
 let isOffline;
+const URL_localhost = 'http://localhost:1337/';
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
@@ -77,7 +78,6 @@ fetchRestaurantFromURL = (callback) => {
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
-    console.log('fillRestaurantHTML', restaurant)
     const name = document.getElementById('restaurant-name');
     name.innerHTML = restaurant.name;
     name.tabIndex = 1;
@@ -226,3 +226,24 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+document.getElementById('post-comment').addEventListener('click', function(){
+    var dataReview = {
+        "restaurant_id": restaurant.id,
+        "name": document.getElementById('reviwer-name').value,
+        "rating": document.getElementById('rating').value,
+        "comments": document.getElementById('comment').value
+    };
+
+    fetch(URL_localhost + 'reviews/',
+            {
+                method: "POST",
+                headers: new Headers({
+                    'Content-Type': 'application/json; charset=utf-8'
+                }),
+                body: JSON.stringify(dataReview)
+            }
+        ).then(res => res.json())
+        .catch(error => console.error('Error:', error))
+        .then(response => console.log('Success:', response));
+});
