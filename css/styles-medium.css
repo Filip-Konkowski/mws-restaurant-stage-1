@@ -292,3 +292,37 @@ nav h1 a {
 
 #neighborhoods-select:focus, #cuisines-select:focus {
   border: 5px solid red; }
+
+input {
+  width: 80%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+}
+
+input, label {
+  display:block;
+}
+
+#post-comment {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 5px 15px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor:pointer;
+  vertical-align:middle;
+  text-align: center;
+  -webkit-transition-duration: 0.4s; /* Safari */
+  transition-duration: 0.4s;
+  margin-bottom: 10px;
+}
+
+#post-comment:hover {
+  background-color: white;
+  color: black;
+  border: 2px solid #4CAF50;
+}
