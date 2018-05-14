@@ -35,7 +35,7 @@ class DBHelper {
   }
 
   static requestError(e) {
-        console.log('fetch error: ', e);
+        console.error('fetch error: ', e);
   }
 
   static removeIndexedDB() {

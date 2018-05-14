@@ -121,7 +121,19 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
         fillRestaurantHoursHTML(restaurant.operating_hours);
     }
     // fill reviews
-    fillReviewsHTML(restaurant.reviews);
+
+    fetch(URL_localhost + 'reviews/?restaurant_id=' + restaurant.id,
+        {
+            mathod: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => {
+                let date = new Date(item.createdAt)
+                item.createdAt = date.toUTCString()
+            })
+            fillReviewsHTML(data);
+        })
 }
 
 /**
@@ -187,7 +199,7 @@ createReviewHTML = (review) => {
     li.appendChild(name);
 
     const date = document.createElement('p');
-    date.innerHTML = review.date;
+    date.innerHTML = review.createdAt;
     li.appendChild(date);
 
     const rating = document.createElement('p');
