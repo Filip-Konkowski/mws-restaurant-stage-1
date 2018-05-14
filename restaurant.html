@@ -101,6 +101,10 @@
               }).catch(function() {
               console.log("Service Worker Failed to Register")
           });
+
+          navigator.serviceWorker.addEventListener('message', function(event) {
+              alert(event.data.alert);
+          });
       }
   </script>
   <!-- End scripts -->

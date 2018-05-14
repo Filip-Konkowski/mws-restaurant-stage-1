@@ -48,11 +48,35 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
+    if (event.request.clone().method == "POST") {
+        console.log('method POST')
+        console.log('header POST', self)
+        fetch(event.request.clone()).catch(function() {
+            console.log('catch POST')
+            // const allClients = self.clients.matchAll({
+            //     includeUncontrolled: true
+            // })
+            // console.log('allClients POST', allClients)
+
+            // If it doesn't work, post a failure message to the client
+            // self.clients.match(thisClient).then(function(client) {
+            //     client.postMessage({
+            //         message: "Post unsuccessful.",
+            //         alert: alert // A string we instantiated earlier
+            //     });
+            // });
+            // Respond with the page that the request originated from
+            // return caches.match(event.request.clone().referrer);
+        });
+    }
+
     event.respondWith(
         caches.match(event.request).then(function(response) {
             return response || fetch(event.request).catch(function(error) {console.error('cached: ',error)});
         })
     );
+
+
 });
 
 function servePhoto(request) {
