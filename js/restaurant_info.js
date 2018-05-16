@@ -1,6 +1,7 @@
 let restaurant;
 var map;
 let isOffline;
+const URL_localhost = 'http://localhost:1337/';
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
@@ -44,10 +45,6 @@ fetchRestaurantFromURL = (callback) => {
     } else {
         let numericalRestaurantId = Number(id);
 
-        if (self.restaurant) { // restaurant already fetched!
-            callback(null, self.restaurant)
-            return;
-        }
         IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
             if (error || restaurant.length === 0) {
                 console.error('IndexDBHelper fetch fails: ',error);
@@ -67,9 +64,7 @@ fetchRestaurantFromURL = (callback) => {
                 fillRestaurantHTML(restaurant);
                 return callback(null, restaurant)
             }
-
         });
-
     }
 }
 
@@ -77,7 +72,6 @@ fetchRestaurantFromURL = (callback) => {
  * Create restaurant HTML and add it to the webpage
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
-    console.log('fillRestaurantHTML', restaurant)
     const name = document.getElementById('restaurant-name');
     name.innerHTML = restaurant.name;
     name.tabIndex = 1;
@@ -121,7 +115,19 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
         fillRestaurantHoursHTML(restaurant.operating_hours);
     }
     // fill reviews
-    fillReviewsHTML(restaurant.reviews);
+
+    fetch(URL_localhost + 'reviews/?restaurant_id=' + restaurant.id,
+        {
+            mathod: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => {
+                let date = new Date(item.createdAt)
+                item.createdAt = date.toUTCString()
+            })
+            fillReviewsHTML(data);
+        })
 }
 
 /**
@@ -129,6 +135,11 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
  */
 fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
     const hours = document.getElementById('restaurant-hours');
+
+    if(hours.getElementsByTagName('tr').length > 0) {
+        return;
+    }
+
     for (let key in operatingHours) {
         const row = document.createElement('tr');
 
@@ -149,6 +160,11 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
     const container = document.getElementById('reviews-container');
+
+    if(container.getElementsByTagName('h3').length > 0) {
+        return;
+    }
+
     const title = document.createElement('h3');
     title.innerHTML = 'Reviews';
     container.appendChild(title);
@@ -177,7 +193,7 @@ createReviewHTML = (review) => {
     li.appendChild(name);
 
     const date = document.createElement('p');
-    date.innerHTML = review.date;
+    date.innerHTML = review.createdAt;
     li.appendChild(date);
 
     const rating = document.createElement('p');
@@ -216,3 +232,24 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+document.getElementById('post-comment').addEventListener('click', function(){
+    var dataReview = {
+        "restaurant_id": restaurant.id,
+        "name": document.getElementById('reviwer-name').value,
+        "rating": document.getElementById('rating').value,
+        "comments": document.getElementById('comment').value
+    };
+
+    fetch(URL_localhost + 'reviews/',
+            {
+                method: "POST",
+                headers: new Headers({
+                    'Content-Type': 'application/json; charset=utf-8'
+                }),
+                body: JSON.stringify(dataReview)
+            }
+        ).then(res => res.json())
+        .catch(error => console.error('Error:', error))
+        .then(response => console.log('Success:', response));
+});

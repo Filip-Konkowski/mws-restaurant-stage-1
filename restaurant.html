@@ -55,6 +55,20 @@
     <!-- end restaurant -->
     <!-- Beginning reviews -->
     <section id="reviews-container">
+      <div id="reviews-form">
+        <h4>Add review</h4>
+        <form method="POST" action="http://localhost:1337/reviews/">
+          <label for="reviwer-name">Your name</label>
+          <input value="" type="text" name="reviwer_name" id="reviwer-name" required>
+          <br>
+          <label for="rating">Rating</label>
+          <input value="" type="number" min="1" max="5" name="rating" id="rating" required>
+          <br>
+          <label for="comment">Comment</label>
+          <input value="" type="text" name="comment" id="comment" required>
+          <div id="post-comment">Post comment</div>
+        </form>
+      </div>
       <ul id="reviews-list"></ul>
     </section>
     <!-- End reviews -->
@@ -86,6 +100,10 @@
 
               }).catch(function() {
               console.log("Service Worker Failed to Register")
+          });
+
+          navigator.serviceWorker.addEventListener('message', function(event) {
+              alert(event.data.alert);
           });
       }
   </script>
