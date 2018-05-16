@@ -7,7 +7,7 @@ class IndexedDBHelper {
         }
     }
 
-    static openIdb(name = DBNAME, version = 1) {
+    static openIdb(name = DBNAME, version = 1, objectStore = "mws-store") {
 
         let request = window.indexedDB.open(name, version);
 
@@ -17,7 +17,7 @@ class IndexedDBHelper {
 
         request.onupgradeneeded = function(event) {
             let db = event.target.result;
-            var objectStore = db.createObjectStore("mws-store", {keyPath: 'id'});
+            var objectStore = db.createObjectStore(objectStore, {keyPath: 'id'});
         }
 
         return request
@@ -49,9 +49,7 @@ class IndexedDBHelper {
                 } else {
                     callback('Restaurant does not exist', null);
                 }
-
             }
-
         };
 
         request.onerror = function() {
@@ -117,7 +115,6 @@ class IndexedDBHelper {
                 } else {
                     return callback('Restaurant does not exist', null);
                 }
-
             };
         }
 

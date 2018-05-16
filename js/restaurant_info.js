@@ -45,10 +45,6 @@ fetchRestaurantFromURL = (callback) => {
     } else {
         let numericalRestaurantId = Number(id);
 
-        if (self.restaurant) { // restaurant already fetched!
-            callback(null, self.restaurant)
-            return;
-        }
         IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
             if (error || restaurant.length === 0) {
                 console.error('IndexDBHelper fetch fails: ',error);
@@ -68,9 +64,7 @@ fetchRestaurantFromURL = (callback) => {
                 fillRestaurantHTML(restaurant);
                 return callback(null, restaurant)
             }
-
         });
-
     }
 }
 
