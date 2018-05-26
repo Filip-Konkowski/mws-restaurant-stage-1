@@ -61,8 +61,8 @@ fetchRestaurantFromURL = (callback) => {
                 });
             } else {
                 self.isOffline = true;
+                console.log('looks like isOffline and restaurant', restaurant)
                 fillRestaurantHTML(restaurant);
-                return callback(null, restaurant)
             }
         });
     }
@@ -73,6 +73,9 @@ fetchRestaurantFromURL = (callback) => {
  */
 fillRestaurantHTML = (restaurant = self.restaurant) => {
     const name = document.getElementById('restaurant-name');
+    if(name.innerHTML !== '') {
+        return;
+    }
     name.innerHTML = restaurant.name;
     name.tabIndex = 1;
 
@@ -115,19 +118,18 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
         fillRestaurantHoursHTML(restaurant.operating_hours);
     }
     // fill reviews
-
     fetch(URL_localhost + 'reviews/?restaurant_id=' + restaurant.id,
         {
             mathod: 'GET'
-        })
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(item => {
-                let date = new Date(item.createdAt)
-                item.createdAt = date.toUTCString()
-            })
-            fillReviewsHTML(data);
-        })
+        }).then(response => {
+            response.json().then(data => {
+                data.forEach(item => {
+                    let date = new Date(item.createdAt);
+                    item.createdAt = date.toUTCString()
+                });
+                fillReviewsHTML(data);
+            });
+        }).catch(error => console.error('Error review fetch GET request: ', error))
 }
 
 /**
@@ -250,6 +252,25 @@ document.getElementById('post-comment').addEventListener('click', function(){
                 body: JSON.stringify(dataReview)
             }
         ).then(res => res.json())
-        .catch(error => console.error('Error:', error))
-        .then(response => console.log('Success:', response));
+        .catch(error => console.error('Error when sending POST request: ', error))
+        .then(function(response) {
+            let dbOpen = this.indexedDB.open('mws');
+
+            dbOpen.onerror = function(event) {
+                console.error("Database error: " + event.target.errorCode);
+            };
+
+            var objectStore = 'mws-review'
+            dbOpen.onsuccess = function(event) {
+                console.log('reaIDB form', objectStore);
+                let db = event.target.result;
+                var tx = db.transaction('mws-review', 'readwrite');
+                var store = tx.objectStore('mws-review');
+                var itemsAll = store.put(response, restaurant.id);
+                console.log('all items: ', itemsAll)
+
+                event.target.result.close();
+
+            }
+        });
 });

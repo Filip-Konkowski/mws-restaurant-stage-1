@@ -104,6 +104,7 @@
 
           navigator.serviceWorker.addEventListener('message', function(event) {
               alert(event.data.alert);
+              console.log('navigator message listener')
           });
       }
   </script>

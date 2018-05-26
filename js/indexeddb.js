@@ -7,33 +7,31 @@ class IndexedDBHelper {
         }
     }
 
-    static openIdb(name = DBNAME, version = 1, objectStore = "mws-store") {
+    static openIdb(name = DBNAME, objectStore = "mws-store") {
 
-        let request = window.indexedDB.open(name, version);
+        let request = window.indexedDB.open(name);
 
         request.onerror = function(event) {
             console.error("Database error: " + event.target.errorCode);
         };
 
-        request.onupgradeneeded = function(event) {
-            let db = event.target.result;
-            var objectStore = db.createObjectStore(objectStore, {keyPath: 'id'});
-        }
-
         return request
     }
 
-    static putData(data) {
+    static putData(data, storeName = "mws-store") {
         let request = IndexedDBHelper.openIdb();
 
         request.onsuccess = function(event) {
             let db = event.target.result;
             // Store values in the newly created objectStore.
-            let resteurantsObjectStore = db.transaction("mws-store", "readwrite").objectStore("mws-store");
-            data.forEach(function (restaurant) {
-                resteurantsObjectStore.add(restaurant);
+            let IDBObjectStore = db.transaction(storeName, "readwrite").objectStore(storeName);
+            data.forEach(function (dataElement) {
+                IDBObjectStore.add(dataElement);
             });
         }
+        request.onerror = function() {
+            console.error('Unable to put data to indexed DB');
+        };
     }
 
     static fetchAllFromIndexedDB(callback) {
@@ -96,7 +94,7 @@ class IndexedDBHelper {
 
     static fetchByIdFromIndexedDB(resteurantId, callback) {
 
-        let request = IndexedDBHelper.openIdb();
+        let request = window.indexedDB.open(DBNAME);
         if(!this.isNumber(resteurantId)) {
             console.error('IndexedDB fetch error. ResteurantId is not Number type');
             return;
@@ -109,7 +107,6 @@ class IndexedDBHelper {
             let objectStore = transaction.objectStore("mws-store");
             objectStore.get(resteurantId).onsuccess = function(event) {
                 restaurant = event.target.result;
-                this.indexedDbResults = restaurant;
                 if(restaurant) {
                     return callback(null, restaurant);
                 } else {

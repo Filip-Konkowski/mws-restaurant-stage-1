@@ -1,13 +1,22 @@
+importScripts('/js/idb.js');
+
 const staticCacheName = 'mws-v1';
 const imageCacheName = 'mws-image';
-const reviewCacheName = 'mws-review';
+let DBName = 'mws';
+let ReviewsDataStore = 'mws-review';
+let DBVersion = 2;
+let dbPromise;
 
 var allCaches = [
     staticCacheName,
-    imageCacheName
+    imageCacheName,
 ];
 
+
 self.addEventListener('install', function(event) {
+
+console.log('install sw');
+
 
     event.waitUntil(
         caches.open(staticCacheName).then(function(cache) {
@@ -28,7 +37,6 @@ self.addEventListener('install', function(event) {
 
 
 self.addEventListener('activate', function(event) {
-    console.log('addEventListener active')
     event.waitUntil(
         caches.keys().then(function(cacheNames) {
             return Promise.all(
@@ -41,6 +49,10 @@ self.addEventListener('activate', function(event) {
             );
         })
     );
+    event.waitUntil(initDB());
+    // event.waitUntil(updateDB());
+
+    // event.waitUntil(dbPromise = idb.open(DBName, DBVersion));
 });
 
 self.addEventListener('fetch', function(event) {
@@ -57,28 +69,25 @@ self.addEventListener('fetch', function(event) {
     }
 
     if(/reviews/.test(event.request.url)) {
-        event.respondWith(this.serveReviews(event.request));
+        event.respondWith(serveReviews(event));
         return;
     }
 
     event.respondWith(
         caches.match(request).then(function(response) {
-            return response || fetch(request).catch(function(error) {console.error('cached: ',error)});
+            return response || fetch(request).catch(function(error) {console.error('cached error : ',error)});
         })
     );
 });
 
 function servePhoto(request) {
-
     var storageUrlRep = request.url.replace(/-\w+\.jpg$/, '');
 
     return caches.open(imageCacheName).then(function(cache) {
         return cache.match(storageUrlRep).then(function (response) {
-            // console.log('response',response);
              if(response) return response;
 
             return fetch(request).then(function(networkResponse) {
-                // console.log('networkResponse', networkResponse)
                 cache.put(storageUrlRep, networkResponse.clone());
                 return networkResponse
             })
@@ -86,19 +95,191 @@ function servePhoto(request) {
     })
 }
 
-function serveReviews(request) {
-    console.log('review', request.url)
-    var storageId = request.url.replace(/..+\/reviews\/.restaurant_id=/, '');
+function serveReviews(event) {
+    var storageId = Number(event.request.url.replace(/..+\/reviews\/.restaurant_id=/, ''));
 
-    return caches.open(reviewCacheName).then(function(cache) {
-        return cache.match(storageId).then(function(response) {
-            if(response) return response;
+    if (event.request.method === "GET") {
+        return dbPromise.then(function (db) {
+            let tx = db.transaction(ReviewsDataStore, 'readonly');
+            let store = tx.objectStore(ReviewsDataStore);
+            return store.getAll();
+        }).then(function(reviews) {
 
-            return fetch(request).then(function (networkResponse) {
-                console.log('network response for reviews', networkResponse)
-                cache.put(storageId, networkResponse.clone());
-                return networkResponse;
+            if (!reviews.length) {
+                // fetch it from net
+                return fetch(event.request).then(function (response) {
+                    return response.clone().json().then(json => {
+                        // add to db
+                        console.log('event respond fetch from net');
+                        addReviewsToIndexedDB(json, storageId);
+                        return response;
+                    })
+                });
+            } else {
+                let response = new Response(JSON.stringify(reviews[0].reviews), {
+                    headers: new Headers({
+                        'Content-type': 'application/json',
+                        'Access-Control-Allow-Credentials': 'true'
+                    }),
+                    type: 'cors',
+                    status: 200
+                });
+                console.log('already in DB');
+                return response;
+            }
+        });
+
+    }
+
+    if (event.request.method === "POST") {
+        console.log('POST request');
+
+        dbPromise.then(db => {
+            let tx = db.transaction(ReviewsDataStore,'readwrite');
+            let store = tx.objectStore(ReviewsDataStore);
+
+            store.add({
+                "id": 2,
+                "restaurant_id": 2,
+                "name": "AA Filip 423432 4234 23",
+                "rating": 5,
+                "comments": "comment text 42342 343 4 324 23 423 423 42 34 234 32"
+            }).then(function() {
+                console.log('All data added to DB successfully');
+            }).catch(error => {
+                tx.abort()
+                console.error('Put data to Index fail: ', error)
             })
         })
-    })
+
+    }
+        // console.log('POST request');
+        //
+        //     // Try to get the response from the network
+        // fetch(event.request).catch(function() {
+        //     // If it doesn't work, post a failure message to the client
+        //     console.log('indexedDB.open');
+        //     let request = indexedDB.open('mws');
+        //
+        //
+        //     request.onsuccess = function(e) {
+        //         console.log('stored request: ', request)
+        //
+        //         var database = e.target.result;
+        //         let tx = database.transaction('mws-review','readwrite')
+        //         let store = tx.objectStore('mws-review')
+        //         var req = store.add({
+        //             "restaurant_id": 2,
+        //             "name": "Filip",
+        //             "rating": 3,
+        //             "comments": "comment text"
+        //         })
+        //         e.target.result.close();
+        //
+        //         req.onsuccess = function (evt) {
+        //             console.log("Insertion in DB successful");
+        //         };
+        //         req.onerror = function() {
+        //             console.error("addPublication error", this.error);
+        //         };
+        //     };
+        // });
+}
+
+function createStore(dbName, storeName) {
+    var request = indexedDB.open(dbName);
+    request.onsuccess = function (e){
+        var database = e.target.result;
+        var version =  parseInt(database.version);
+        database.close();
+        console.log('version of db', version)
+        var secondRequest = indexedDB.open(dbName, version + 1);
+        secondRequest.onupgradeneeded = function (e) {
+            var database = e.target.result;
+            console.log('going to create DB store', storeName)
+            var objectStore = database.createObjectStore(storeName, {
+                keyPath: 'id'
+            });
+            DBVersion = version + 1;
+
+        };
+        // secondRequest.onsuccess = function (e) {
+        //     DBVersion = version + 1;
+        //     e.target.result.close();
+        // }
+
+        database.close();
+    }
+}
+
+function addReviewsToIndexedDB(jsonData, storageId) {
+    let transaction;
+    dbPromise.then(function(db) {
+        transaction = db.transaction(ReviewsDataStore, 'readwrite');
+        let store = transaction.objectStore(ReviewsDataStore);
+
+        console.log('jsonData', jsonData)
+        store.put({'reviews': jsonData, 'id': storageId});
+        return transaction.complete;
+    }).then(function() {
+        console.log('All data added to DB successfully');
+    }).catch(function(err) {
+        tx.abort();
+        console.log('error in DB adding', err);
+        return false;
+    });
+}
+
+
+function readAllIDB(storeId, objectStore = "mws-review") {
+    let request = this.indexedDB.open('mws');
+
+    request.onerror = function(event) {
+        console.error("Database error: " + event.target.error);
+    };
+
+    request.onsuccess = function(event)  {
+        let db = event.target.result;
+        var tx = db.transaction([objectStore], 'readonly');
+        var store = tx.objectStore(objectStore);
+        var requestGetReviews = store.get(storeId)
+        requestGetReviews.onsuccess = function(event) {
+            console.log('event.target.result.reviews', event.target.result.reviews)
+            return event.target.result.reviews;
+        };
+    };
+
+    return request;
+}
+
+
+
+function updateDB() {
+    idb.open(DBName, DBVersion, function (upgradeDb) {
+        console.log('update DB Store');
+        if (!upgradeDb.objectStoreNames.contains('mws-review')) {
+            upgradeDb.createObjectStore('mws-review', { keyPath: 'id' });
+        }
+
+        if (!upgradeDb.objectStoreNames.contains('mws-store')) {
+            upgradeDb.createObjectStore('mws-store', { keyPath: 'id' });
+        }
+    });
+}
+
+function initDB() {
+    console.log('initDB')
+    dbPromise = idb.open(DBName, DBVersion, function (upgradeDb) {
+        console.log('making DB Store');
+        if (!upgradeDb.objectStoreNames.contains('mws-review')) {
+            console.log('createObjectStore ReviewsDataStore')
+            let store = upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' })
+            store.createIndex('restaurant_id', 'restaurant_id', {unique: false});
+
+        }
+        if (!upgradeDb.objectStoreNames.contains('mws-store')) {
+            console.log('createObjectStore mws-store')
+            upgradeDb.createObjectStore('mws-store', { keyPath: 'id' })
+        }
+    });
 }
