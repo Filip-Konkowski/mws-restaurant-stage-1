@@ -37,32 +37,18 @@ fetchRestaurantFromURL = (callback) => {
         return;
     }
     const id = getParameterByName('id');
-
     if (!id) { // no id found in URL
         error = 'No restaurant id in URL'
         callback(error, null);
     } else {
-        let numericalRestaurantId = Number(id);
-
-        IndexedDBHelper.fetchByIdFromIndexedDB(numericalRestaurantId,(error, restaurant) => {
-            if (error || restaurant.length === 0) {
-                console.error('IndexDBHelper fetch fails: ',error);
-                DBHelper.fetchRestaurantById(numericalRestaurantId, (error, restaurant) => {
-                    if (!restaurant || error) {
-                        console.error('DB fetch fails: ',error);
-                        return callback(error, null)
-
-                    } else {
-                        self.isOffline = false;
-                        fillRestaurantHTML(restaurant);
-                        return callback(null, restaurant)
-                    }
-                });
-            } else {
-                self.isOffline = true;
-                console.log('looks like isOffline and restaurant', restaurant)
-                fillRestaurantHTML(restaurant);
+        DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+            self.restaurant = restaurant;
+            if (!restaurant) {
+                console.error(error);
+                return;
             }
+            fillRestaurantHTML();
+            callback(null, restaurant)
         });
     }
 }
@@ -245,26 +231,54 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
         console.log(dataReview);
         // save to DB
 
-        IndexedDBHelper.openIdb('mws', 3)
 
+        let requestDB = window.indexedDB.open('mws', 4);
+        console.log('window.indexedDB', requestDB)
+        requestDB.onsuccess = function(event) {
+            let db = event.target.result;
+            console.log('onsuccess', db)
+        }
 
-        IndexedDBHelper.dbPromise.then(upgradeDb => {
-                upgradeDb.createObjectStore('outbox', { autoIncrement: true, keyPath: 'id' });
-            })
-            .then(function (db) {
-                var transaction = db.transaction('outbox', 'readwrite');
-                return transaction.objectStore('outbox').put(dataReview);
-            }).then(function () {
-                // form.reset();
-                // register for sync and clean up the form
-                return swRegistration.sync.register('sync').then(() => {
-                    console.log('Sync registered');
-                    // add review to view (for better UX)
-                    // const ul = document.getElementById('reviews-list');
-                    // review.createdAt = new Date();
-                    // ul.appendChild(createReviewHTML(review));
-                });
-            }).catch(error => console.error('DB error:', error));
+        requestDB.onupgradeneeded = function(event) {
+            let outbox = "outbox";
+            let db = event.target.result;
+            console.log('onupgradeneeded', db)
+            if(!db.objectStoreNames.contains(outbox)) {
+                console.log('creating object store outbox')
+                db.createObjectStore(outbox, { autoIncrement: true, keyPath: 'id' });
+            }
+
+            var transaction = db.transaction([outbox], "readwrite");
+            var objectStore = transaction.objectStore(outbox);
+            var objectStoreRequest = objectStore.add(dataReview);
+
+            objectStoreRequest.onsuccess = function(event) {
+                console.log('objectStoreRequest success for outbox')
+            }
+
+            requestDB.onerror = function(event) {
+                let db = event.target.result;
+                console.log('onerror', db)
+            }
+
+        }
+        // IndexedDBHelper.then(upgradeDb => {
+        //         upgradeDb.createObjectStore('outbox', { autoIncrement: true, keyPath: 'id' });
+        //     })
+        //     .then(function (db) {
+        //         var transaction = db.transaction('outbox', 'readwrite');
+        //         return transaction.objectStore('outbox').put(dataReview);
+        //     }).then(function () {
+        //         // form.reset();
+        //         // register for sync and clean up the form
+        //         return swRegistration.sync.register('sync').then(() => {
+        //             console.log('Sync registered');
+        //             // add review to view (for better UX)
+        //             // const ul = document.getElementById('reviews-list');
+        //             // review.createdAt = new Date();
+        //             // ul.appendChild(createReviewHTML(review));
+        //         });
+        //     }).catch(error => console.error('DB error:', error));
 
         // fetch(URL_localhost + 'reviews/',
         //     {

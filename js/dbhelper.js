@@ -22,25 +22,18 @@ class DBHelper {
         {
           method: 'GET'
         })
-        .then(response => response.json())
-        .then(data => {
-            const restaurants = data;
-            IndexedDBHelper.putData(restaurants);
-            callback(null, restaurants);
-        })
-        .catch(function(e) {
-            DBHelper.requestError(e)
+        .then(response => {
+            if(response.status === 200) {
+                response.json()
+                    .then(data => callback(null, data))
+                    .catch(error => callback(error, null))
+            } else {
+                callback(`Request failed. Returned status of ${response.status}`, null);
+            }
+        }).catch(function(e) {
+            callback(e, null)
         });
 
-  }
-
-  static requestError(e) {
-        console.error('fetch error: ', e);
-  }
-
-  static removeIndexedDB() {
-      let indexDbHelper = window.indexedDB;
-      indexDbHelper.deleteDatabase('mws');
   }
 
   static putDataToIndexedDB() {

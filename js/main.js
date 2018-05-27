@@ -8,7 +8,6 @@ var markers = []
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-    setTimeout('', 1000);
   fetchNeighborhoods();
   fetchCuisines();
 });
@@ -17,17 +16,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
  * Fetch all neighborhoods and set their HTML.
  */
 fetchNeighborhoods = () => {
-    IndexedDBHelper.fetchNeighborhoods((error, neighborhoods) => {
-        if (error || neighborhoods.length === 0) {
-            DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-                if (error) { // Got an error
-                    console.error('database error: ', error);
-                } else {
-                  console.log('fetchNeighborhoods from API', neighborhoods)
-                    self.neighborhoods = neighborhoods;
-                    fillNeighborhoodsHTML();
-                }
-            });
+    DBHelper.fetchNeighborhoods((error, neighborhoods) => {
+        if (error) { // Got an error
+            console.error(error);
         } else {
             self.neighborhoods = neighborhoods;
             fillNeighborhoodsHTML();
@@ -52,17 +43,9 @@ fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 fetchCuisines = () => {
-    IndexedDBHelper.fetchCuisines((error, cuisines) => {
-        if (error || cuisines.length === 0) {
-            console.log('IndexDBHelper fetch fetchCuisines: ', cuisines.length);
-            DBHelper.fetchCuisines((error, cuisines) => {
-                if (error) { // Got an error!
-                    console.error(error);
-                } else {
-                    self.cuisines = cuisines;
-                    fillCuisinesHTML();
-                }
-            });
+    DBHelper.fetchCuisines((error, cuisines) => {
+        if (error) { // Got an error!
+            console.error(error);
         } else {
             self.cuisines = cuisines;
             fillCuisinesHTML();
@@ -114,22 +97,14 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-    IndexedDBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-        if (error || cuisine.length === 0 || neighborhood.length === 0) {
-            console.log('IndexDBHelper fetch fetchRestaurantByCuisineAndNeighborhood: ', error);
-            DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-                if (error) { // Got an error!
-                    console.error(error);
-                } else {
-                    resetRestaurants(restaurants);
-                    fillRestaurantsHTML();
-                }
-            });
+    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
+        if (error) { // Got an error!
+            console.error(error);
         } else {
             resetRestaurants(restaurants);
             fillRestaurantsHTML();
         }
-    });
+    })
 }
 
 /**
