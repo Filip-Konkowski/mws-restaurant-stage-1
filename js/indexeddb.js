@@ -38,14 +38,18 @@ class IndexedDBHelper {
         let request = IndexedDBHelper.openIdb();
         request.onsuccess = function(event) {
             let db = event.target.result;
+            if(!db.objectStoreNames.contains("mws-store")) {
+                console.log('Unable to fetch from indexed DB', event)
+                return callback('Restaurant does not exist', null)
+            }
             let transaction = db.transaction("mws-store");
             let objectStore = transaction.objectStore("mws-store");
             objectStore.getAll().onsuccess = function (event) {
                 let restaurants = event.target.result;
                 if (restaurants.length !== 0) {
-                    callback(null, restaurants);
+                    return callback(null, restaurants);
                 } else {
-                    callback('Restaurant does not exist', null);
+                    return callback('Restaurant does not exist', null);
                 }
             }
         };
@@ -100,19 +104,14 @@ class IndexedDBHelper {
             return;
         }
 
-        let dbExists = true;
-        request.onupgradeneeded = function (e){
-            e.target.transaction.abort();
-            dbExists = false;
-        };
 
         request.onsuccess = function(event) {
-            console.log('dbExists', dbExists)
-            if(!dbExists) {
-                return;
-            }
 
             let db = event.target.result;
+            if(!db.objectStoreNames.contains("mws-store")) {
+                console.log('Unable to fetch from indexed DB', event)
+                return callback('Restaurant does not exist', null)
+            }
             let transaction = db.transaction("mws-store");
 
             transaction.onerror = function(event) {

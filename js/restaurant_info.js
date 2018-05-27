@@ -1,6 +1,5 @@
 let restaurant;
 var map;
-let isOffline;
 const URL_localhost = 'http://localhost:1337/';
 
 /**
@@ -234,43 +233,49 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+navigator.serviceWorker.ready.then(function (swRegistration) {
+    document.getElementById('post-comment').addEventListener('click', function(event){
 
-document.getElementById('post-comment').addEventListener('click', function(){
-    var dataReview = {
-        "restaurant_id": restaurant.id,
-        "name": document.getElementById('reviwer-name').value,
-        "rating": document.getElementById('rating').value,
-        "comments": document.getElementById('comment').value
-    };
+        var dataReview = {
+            "restaurant_id": restaurant.id,
+            "name": document.getElementById('reviwer-name').value,
+            "rating": document.getElementById('rating').value,
+            "comments": document.getElementById('comment').value
+        };
+        console.log(dataReview);
+        // save to DB
 
-    fetch(URL_localhost + 'reviews/',
-            {
-                method: "POST",
-                headers: new Headers({
-                    'Content-Type': 'application/json; charset=utf-8'
-                }),
-                body: JSON.stringify(dataReview)
-            }
-        ).then(res => res.json())
-        .catch(error => console.error('Error when sending POST request: ', error))
-        .then(function(response) {
-            let dbOpen = this.indexedDB.open('mws');
+        IndexedDBHelper.openIdb('mws', 3)
 
-            dbOpen.onerror = function(event) {
-                console.error("Database error: " + event.target.errorCode);
-            };
 
-            var objectStore = 'mws-review'
-            dbOpen.onsuccess = function(event) {
-                console.log('reaIDB form', objectStore);
-                let db = event.target.result;
-                var tx = db.transaction('mws-review', 'readwrite');
-                var store = tx.objectStore('mws-review');
-                var itemsAll = store.put(response, restaurant.id);
-                console.log('all items: ', itemsAll)
+        IndexedDBHelper.dbPromise.then(upgradeDb => {
+                upgradeDb.createObjectStore('outbox', { autoIncrement: true, keyPath: 'id' });
+            })
+            .then(function (db) {
+                var transaction = db.transaction('outbox', 'readwrite');
+                return transaction.objectStore('outbox').put(dataReview);
+            }).then(function () {
+                // form.reset();
+                // register for sync and clean up the form
+                return swRegistration.sync.register('sync').then(() => {
+                    console.log('Sync registered');
+                    // add review to view (for better UX)
+                    // const ul = document.getElementById('reviews-list');
+                    // review.createdAt = new Date();
+                    // ul.appendChild(createReviewHTML(review));
+                });
+            }).catch(error => console.error('DB error:', error));
 
-                event.target.result.close();
-
-            }
-        });
+        // fetch(URL_localhost + 'reviews/',
+        //     {
+        //         method: "POST",
+        //         headers: new Headers({
+        //             'Content-Type': 'application/json; charset=utf-8'
+        //         }),
+        //         body: JSON.stringify(dataReview)
+        //     }
+        // ).then(res => res.json())
+        //     .catch(error => console.error('Error when sending POST request: ', error))
+    });
 });
+

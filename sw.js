@@ -50,9 +50,6 @@ self.addEventListener('activate', function(event) {
         })
     );
     event.waitUntil(initDB());
-    // event.waitUntil(updateDB());
-
-    // event.waitUntil(dbPromise = idb.open(DBName, DBVersion));
 });
 
 self.addEventListener('fetch', function(event) {
@@ -100,6 +97,10 @@ function serveReviews(event) {
 
     if (event.request.method === "GET") {
         return dbPromise.then(function (db) {
+            if(!db.objectStoreNames.contains(ReviewsDataStore)) {
+                console.log('Unable to fetch from indexed DB', event)
+                return fetchRequestAndAddToIndexDB(event)
+            }
             let tx = db.transaction(ReviewsDataStore, 'readonly');
             let store = tx.objectStore(ReviewsDataStore);
             return store.getAll();
@@ -132,25 +133,43 @@ function serveReviews(event) {
     }
 
     if (event.request.method === "POST") {
-        console.log('POST request');
+        console.log('POST request', event.request);
+        // let tx;
+        // dbPromise.then(db => {
+        //     let tx = db.transaction(ReviewsDataStore,'readwrite');
+        //     let store = tx.objectStore(ReviewsDataStore);
+        //     return store.get(2)
+        // }).then(reviews => {
+        //     console.log('before add',reviews)
+        //     let myreview = {
+        //         "id": 2,
+        //         "restaurant_id": 2,
+        //         "name": "AA Filip 423432 4234 23",
+        //         "rating": 5,
+        //         "comments": "comment text 42342 343 4 324 23 423 423 42 34 234 32"
+        //     };
+        //     reviews.reviews.push(myreview);
+        //
+        //     console.log('after add',reviews);
+        //     return reviews;
+        // }).then(function(reviews) {
+        //
+        //     dbPromise.then(db => {
+        //         let tx = db.transaction(ReviewsDataStore,'readwrite');
+        //         let store = tx.objectStore(ReviewsDataStore);
+        //         console.log('before put reviews to IDB', reviews);
+        //         return store.put(reviews)
+        //
+        //     }).then(() => {
+        //         console.log('All data added to DB successfully');
+        //     }).catch(error => {
+        //         console.error('Put data to Index fail: ', error);
+        //     });
+        // }).catch(error => {
+        //     console.error('Put data to Index fail: ', error);
+        // });
 
-        dbPromise.then(db => {
-            let tx = db.transaction(ReviewsDataStore,'readwrite');
-            let store = tx.objectStore(ReviewsDataStore);
 
-            store.add({
-                "id": 2,
-                "restaurant_id": 2,
-                "name": "AA Filip 423432 4234 23",
-                "rating": 5,
-                "comments": "comment text 42342 343 4 324 23 423 423 42 34 234 32"
-            }).then(function() {
-                console.log('All data added to DB successfully');
-            }).catch(error => {
-                tx.abort()
-                console.error('Put data to Index fail: ', error)
-            })
-        })
 
     }
         // console.log('POST request');
@@ -184,6 +203,30 @@ function serveReviews(event) {
         //         };
         //     };
         // });
+}
+
+self.addEventListener('sync', function (event) {
+    if (event.tag === 'sync') {
+        console.log('sync', event)
+        // event.waitUntil(
+        //     sendReviews().then(() => {
+        //         console.log('synced');
+        //     }).catch(err => {
+        //         console.log(err, 'error syncing');
+        //     })
+        // );
+    }
+});
+
+function fetchRequestAndAddToIndexDB(event) {
+    return fetch(event.request).then(function (response) {
+        return response.clone().json().then(json => {
+            // add to db
+            console.log('event respond fetch from net');
+            addReviewsToIndexedDB(json, storageId);
+            return response;
+        })
+    });
 }
 
 function createStore(dbName, storeName) {
@@ -220,6 +263,10 @@ function addReviewsToIndexedDB(jsonData, storageId) {
 
         console.log('jsonData', jsonData)
         store.put({'reviews': jsonData, 'id': storageId});
+        jsonData.forEach(review => {
+            console.log('jsonData[0].restaurant_id', jsonData[0].restaurant_id)
+            store.put(review, {'restaurant_id': jsonData[0].restaurant_id});
+        })
         return transaction.complete;
     }).then(function() {
         console.log('All data added to DB successfully');
@@ -255,13 +302,15 @@ function readAllIDB(storeId, objectStore = "mws-review") {
 
 
 function updateDB() {
-    idb.open(DBName, DBVersion, function (upgradeDb) {
+    idb.open(DBName, 2, function (upgradeDb) {
         console.log('update DB Store');
-        if (!upgradeDb.objectStoreNames.contains('mws-review')) {
-            upgradeDb.createObjectStore('mws-review', { keyPath: 'id' });
+        if (!upgradeDb.objectStoreNames.contains(ReviewsDataStore)) {
+            console.log('updateDB ReviewsDataStore', ReviewsDataStore);
+            upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' });
         }
 
         if (!upgradeDb.objectStoreNames.contains('mws-store')) {
+            console.log('updateDB ReviewsDataStore', 'mws-store');
             upgradeDb.createObjectStore('mws-store', { keyPath: 'id' });
         }
     });
@@ -272,13 +321,12 @@ function initDB() {
     dbPromise = idb.open(DBName, DBVersion, function (upgradeDb) {
         console.log('making DB Store');
         if (!upgradeDb.objectStoreNames.contains('mws-review')) {
-            console.log('createObjectStore ReviewsDataStore')
-            let store = upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' })
-            store.createIndex('restaurant_id', 'restaurant_id', {unique: false});
+            console.log('createObjectStore ReviewsDataStore');
+            upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' })
 
         }
         if (!upgradeDb.objectStoreNames.contains('mws-store')) {
-            console.log('createObjectStore mws-store')
+            console.log('createObjectStore mws-store');
             upgradeDb.createObjectStore('mws-store', { keyPath: 'id' })
         }
     });
