@@ -100,10 +100,27 @@ class IndexedDBHelper {
             return;
         }
 
+        let dbExists = true;
+        request.onupgradeneeded = function (e){
+            e.target.transaction.abort();
+            dbExists = false;
+        };
+
         request.onsuccess = function(event) {
+            console.log('dbExists', dbExists)
+            if(!dbExists) {
+                return;
+            }
 
             let db = event.target.result;
             let transaction = db.transaction("mws-store");
+
+            transaction.onerror = function(event) {
+                transaction.abort()
+                console.error('Transaction abort error:', event)
+                return callback('Transaction abort, restaurant does not exist', null);
+            };
+
             let objectStore = transaction.objectStore("mws-store");
             objectStore.get(resteurantId).onsuccess = function(event) {
                 restaurant = event.target.result;
@@ -113,10 +130,12 @@ class IndexedDBHelper {
                     return callback('Restaurant does not exist', null);
                 }
             };
+
         }
 
         request.onerror = function(event) {
             console.error('Unable to fetch from indexed DB', event)
+            return callback('Restaurant does not exist', null)
         }
     }
 
