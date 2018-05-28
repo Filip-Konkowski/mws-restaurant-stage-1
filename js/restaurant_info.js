@@ -43,12 +43,13 @@ fetchRestaurantFromURL = (callback) => {
     } else {
         DBHelper.fetchRestaurantById(id, (error, restaurant) => {
             self.restaurant = restaurant;
+
             if (!restaurant) {
                 console.error(error);
                 return;
             }
             fillRestaurantHTML();
-            callback(null, restaurant)
+            // callback(null, restaurant)
         });
     }
 }
@@ -219,77 +220,39 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
-navigator.serviceWorker.ready.then(function (swRegistration) {
-    document.getElementById('post-comment').addEventListener('click', function(event){
 
-        var dataReview = {
-            "restaurant_id": restaurant.id,
+navigator.serviceWorker.ready.then(function (swRegistration) {
+
+    document.getElementById('post-comment').addEventListener('click', function(event){
+        event.preventDefault();
+        console.log('restaurant', self.restaurant)
+        let dataReview = {
+            "id": 1,
+            "restaurant_id": self.restaurant.id,
             "name": document.getElementById('reviwer-name').value,
             "rating": document.getElementById('rating').value,
             "comments": document.getElementById('comment').value
         };
-        console.log(dataReview);
-        // save to DB
 
-
-        let requestDB = window.indexedDB.open('mws', 4);
-        console.log('window.indexedDB', requestDB)
-        requestDB.onsuccess = function(event) {
-            let db = event.target.result;
-            console.log('onsuccess', db)
-        }
-
-        requestDB.onupgradeneeded = function(event) {
-            let outbox = "outbox";
-            let db = event.target.result;
-            console.log('onupgradeneeded', db)
-            if(!db.objectStoreNames.contains(outbox)) {
-                console.log('creating object store outbox')
-                db.createObjectStore(outbox, { autoIncrement: true, keyPath: 'id' });
+        let outbox = 'outbox'
+        idb.open('mws-outbox', 1, function(dbUpdate) {
+            console.log('updateDB', dbUpdate);
+            if (!dbUpdate.objectStoreNames.contains(outbox)) {
+                console.log('createObjectStore outbox');
+                dbUpdate.createObjectStore(outbox, { autoIncrement: true })
             }
+        }).then(db => {
+            console.log('db', db)
+            let tx = db.transaction(outbox, "readwrite");
+            let objectStore = tx.objectStore(outbox);
+            console.log('post objectStore', objectStore);
+            objectStore.add(dataReview);
 
-            var transaction = db.transaction([outbox], "readwrite");
-            var objectStore = transaction.objectStore(outbox);
-            var objectStoreRequest = objectStore.add(dataReview);
+            return tx.complete;
+        }).then(() =>
+            console.log('data added to outbox')
+        ).catch(error => console.error(error));
 
-            objectStoreRequest.onsuccess = function(event) {
-                console.log('objectStoreRequest success for outbox')
-            }
-
-            requestDB.onerror = function(event) {
-                let db = event.target.result;
-                console.log('onerror', db)
-            }
-
-        }
-        // IndexedDBHelper.then(upgradeDb => {
-        //         upgradeDb.createObjectStore('outbox', { autoIncrement: true, keyPath: 'id' });
-        //     })
-        //     .then(function (db) {
-        //         var transaction = db.transaction('outbox', 'readwrite');
-        //         return transaction.objectStore('outbox').put(dataReview);
-        //     }).then(function () {
-        //         // form.reset();
-        //         // register for sync and clean up the form
-        //         return swRegistration.sync.register('sync').then(() => {
-        //             console.log('Sync registered');
-        //             // add review to view (for better UX)
-        //             // const ul = document.getElementById('reviews-list');
-        //             // review.createdAt = new Date();
-        //             // ul.appendChild(createReviewHTML(review));
-        //         });
-        //     }).catch(error => console.error('DB error:', error));
-
-        // fetch(URL_localhost + 'reviews/',
-        //     {
-        //         method: "POST",
-        //         headers: new Headers({
-        //             'Content-Type': 'application/json; charset=utf-8'
-        //         }),
-        //         body: JSON.stringify(dataReview)
-        //     }
-        // ).then(res => res.json())
-        //     .catch(error => console.error('Error when sending POST request: ', error))
     });
 });
 

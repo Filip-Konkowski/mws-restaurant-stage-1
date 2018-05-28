@@ -63,6 +63,10 @@
               }).catch(function() {
               console.log("Service Worker Failed to Register")
           });
+          // navigator.serviceWorker.ready.then(function(swRegistration) {
+          //     console.log('navigator.serviceWorker.ready sync');
+          //     return swRegistration.sync.register('myFirstSync');
+          // });
       }
   </script>
   <footer id="footer">
