@@ -220,21 +220,23 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
-
+//
 navigator.serviceWorker.ready.then(function (swRegistration) {
 
-    document.getElementById('post-comment').addEventListener('click', function(event){
+    let form = document.querySelector('#submit-review');
+console.log(form)
+    form.addEventListener('submit', function (event) {
         event.preventDefault();
-        console.log('restaurant', self.restaurant)
+        console.log('submit clicked');
+
         let dataReview = {
-            "id": 1,
             "restaurant_id": self.restaurant.id,
-            "name": document.getElementById('reviwer-name').value,
+            "name": document.getElementById('reviewer-name').value,
             "rating": document.getElementById('rating').value,
             "comments": document.getElementById('comment').value
         };
 
-        let outbox = 'outbox'
+        let outbox = 'outbox';
         idb.open('mws-outbox', 1, function(dbUpdate) {
             console.log('updateDB', dbUpdate);
             if (!dbUpdate.objectStoreNames.contains(outbox)) {
@@ -249,10 +251,61 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
             objectStore.add(dataReview);
 
             return tx.complete;
-        }).then(() =>
-            console.log('data added to outbox')
-        ).catch(error => console.error(error));
+        }).then(() => {
 
-    });
+            console.log('data added to outbox')
+            return swRegistration.sync.register('sync').then(() => {
+                console.log('Sync registered');
+                // add review to view (for better UX)
+                // const ul = document.getElementById('reviews-list');
+                // review.createdAt = new Date();
+                // ul.appendChild(createReviewHTML(review));
+            });
+        }).catch(error => console.error(error));
+
+
+    })
+
+    //
+    //
+    // document.getElementById('post-comment').addEventListener('click', function(event){
+    //     // event.preventDefault();
+    //     console.log('restaurant', self.restaurant)
+    //     let dataReview = {
+    //         "id": 1,
+    //         "restaurant_id": self.restaurant.id,
+    //         "name": document.getElementById('reviwer-name').value,
+    //         "rating": document.getElementById('rating').value,
+    //         "comments": document.getElementById('comment').value
+    //     };
+    //
+    //     let outbox = 'outbox'
+    //     idb.open('mws-outbox', 1, function(dbUpdate) {
+    //         console.log('updateDB', dbUpdate);
+    //         if (!dbUpdate.objectStoreNames.contains(outbox)) {
+    //             console.log('createObjectStore outbox');
+    //             dbUpdate.createObjectStore(outbox, { autoIncrement: true })
+    //         }
+    //     }).then(db => {
+    //         console.log('db', db)
+    //         let tx = db.transaction(outbox, "readwrite");
+    //         let objectStore = tx.objectStore(outbox);
+    //         console.log('post objectStore', objectStore);
+    //         objectStore.add(dataReview);
+    //
+    //         return tx.complete;
+    //     }).then(() => {
+    //
+    //         console.log('data added to outbox')
+    //         return swRegistration.sync.register('sync').then(() => {
+    //             console.log('Sync registered');
+    //             // add review to view (for better UX)
+    //             // const ul = document.getElementById('reviews-list');
+    //             // review.createdAt = new Date();
+    //             // ul.appendChild(createReviewHTML(review));
+    //         });
+    //     }).catch(error => console.error(error));
+    //
+    // });
 });
 

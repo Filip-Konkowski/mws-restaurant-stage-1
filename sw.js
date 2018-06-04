@@ -5,7 +5,7 @@ const imageCacheName = 'mws-image';
 let DBName = 'mws';
 let ReviewsDataStore = 'mws-review';
 let RestaurantDataStore = 'mws-store';
-let DBVersion = 1;
+let OutboxDataStore = 'mws-outbox';
 let dbPromise;
 
 let allCaches = [
@@ -61,8 +61,50 @@ self.addEventListener('activate', function(event) {
 
 });
 
+self.addEventListener('sync', function (event) {
+    console.log('going to sync idb with net');
+    if (event.tag === 'sync') {
+        event.waitUntil(
+            sendReviews().then(() => {
+                console.log('synced');
+            }).catch(err => {
+                console.log(err, 'error syncing');
+            })
+        );
+    }
+});
+
+function sendReviews() {
+    return idb.open(OutboxDataStore, 1).then(db => {
+        let tx = db.transaction('outbox', 'readonly');
+        tx.objectStore('outbox').openCursor().then(function cursorIterate(cursor) {
+            if (!cursor) return;
+            let review = cursor.value;
+
+            fetch('http://localhost:1337/reviews', {
+                method: 'POST',
+                body: JSON.stringify(review),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                if (data) {
+                    idb.open(OutboxDataStore, 1).then(db => {
+                        let tx = db.transaction('outbox', 'readwrite');
+                        tx.objectStore('outbox').delete(cursor.key).then(sendReviews);
+
+                    });
+                }
+            });
+        });
+    })
+}
+
 self.addEventListener('fetch', function(event) {
-    var requestUrl = new URL(event.request.url);
+    let requestUrl = new URL(event.request.url);
     if (event.request.url.endsWith('localhost:1337/restaurants')){
         event.respondWith(serveRestaurant(event));
         return;
@@ -189,10 +231,7 @@ function addRestaurantToIndexedDB(jsonData) {
         let transaction = db.transaction(RestaurantDataStore, 'readwrite');
         let store = transaction.objectStore(RestaurantDataStore);
 
-        console.log('jsonData', jsonData)
-
         jsonData.forEach(function(resData) {
-            console.log('adding resData', resData);
             store.put(resData);  // put is safer because it doesn't give error on duplicate add
         });
         return transaction.complete;
@@ -222,23 +261,6 @@ function addReviewsToIndexedDB(jsonData, storageId) {
 
 function initDB() {
     console.log('initDB')
-    // let openRequest = indexedDB.open(DBName, 1);
-    //
-    // openRequest.onupgradeneeded = function(e) {
-    //     var upgradeDb = e.target.result;
-    //     dbPromise = upgradeDb
-    //     console.log('running onupgradeneeded');
-    //     if (!upgradeDb.objectStoreNames.contains('mws-review')) {
-    //         console.log('createObjectStore ReviewsDataStore');
-    //         upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' })
-    //
-    //     }
-    //     if (!upgradeDb.objectStoreNames.contains('mws-store')) {
-    //         console.log('createObjectStore mws-store');
-    //         upgradeDb.createObjectStore('mws-store', { keyPath: 'id' })
-    //     }
-    // };
-
 
     dbPromise = idb.open(DBName, 1, function (upgradeDb) {
         console.log('making DB Store');
@@ -250,10 +272,6 @@ function initDB() {
         if (!upgradeDb.objectStoreNames.contains('mws-store')) {
             console.log('createObjectStore mws-store');
             upgradeDb.createObjectStore('mws-store', { keyPath: 'id' })
-        }
-        if (!upgradeDb.objectStoreNames.contains('outbox')) {
-            console.log('createObjectStore outbox');
-            upgradeDb.createObjectStore('outbox', { autoIncrement:true })
         }
     }).catch(e => console.error(e));
 

@@ -47,7 +47,6 @@
       </div>
     </section>
   </main>
-  <script type="application/javascript" charset="utf-8" src="js/indexeddb.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAO7Yg0-A7BNbXWGA07b_7BSzRkTyw_fsE &libraries=places&callback=initMap"></script>
@@ -63,10 +62,9 @@
               }).catch(function() {
               console.log("Service Worker Failed to Register")
           });
-          // navigator.serviceWorker.ready.then(function(swRegistration) {
-          //     console.log('navigator.serviceWorker.ready sync');
-          //     return swRegistration.sync.register('myFirstSync');
-          // });
+          navigator.serviceWorker.ready.then(function(swRegistration) {
+              console.log('navigator.serviceWorker.ready sync');
+          });
       }
   </script>
   <footer id="footer">
