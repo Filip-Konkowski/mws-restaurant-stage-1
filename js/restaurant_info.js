@@ -108,7 +108,9 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
         {
             mathod: 'GET'
         }).then(response => {
+
             response.json().then(data => {
+                console.log('response.json', data)
                 data.forEach(item => {
                     let date = new Date(item.createdAt);
                     item.createdAt = date.toUTCString()
@@ -224,7 +226,6 @@ getParameterByName = (name, url) => {
 navigator.serviceWorker.ready.then(function (swRegistration) {
 
     let form = document.querySelector('#submit-review');
-console.log(form)
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         console.log('submit clicked');
@@ -265,47 +266,5 @@ console.log(form)
 
 
     })
-
-    //
-    //
-    // document.getElementById('post-comment').addEventListener('click', function(event){
-    //     // event.preventDefault();
-    //     console.log('restaurant', self.restaurant)
-    //     let dataReview = {
-    //         "id": 1,
-    //         "restaurant_id": self.restaurant.id,
-    //         "name": document.getElementById('reviwer-name').value,
-    //         "rating": document.getElementById('rating').value,
-    //         "comments": document.getElementById('comment').value
-    //     };
-    //
-    //     let outbox = 'outbox'
-    //     idb.open('mws-outbox', 1, function(dbUpdate) {
-    //         console.log('updateDB', dbUpdate);
-    //         if (!dbUpdate.objectStoreNames.contains(outbox)) {
-    //             console.log('createObjectStore outbox');
-    //             dbUpdate.createObjectStore(outbox, { autoIncrement: true })
-    //         }
-    //     }).then(db => {
-    //         console.log('db', db)
-    //         let tx = db.transaction(outbox, "readwrite");
-    //         let objectStore = tx.objectStore(outbox);
-    //         console.log('post objectStore', objectStore);
-    //         objectStore.add(dataReview);
-    //
-    //         return tx.complete;
-    //     }).then(() => {
-    //
-    //         console.log('data added to outbox')
-    //         return swRegistration.sync.register('sync').then(() => {
-    //             console.log('Sync registered');
-    //             // add review to view (for better UX)
-    //             // const ul = document.getElementById('reviews-list');
-    //             // review.createdAt = new Date();
-    //             // ul.appendChild(createReviewHTML(review));
-    //         });
-    //     }).catch(error => console.error(error));
-    //
-    // });
 });
 

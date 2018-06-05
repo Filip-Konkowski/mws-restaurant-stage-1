@@ -2,6 +2,7 @@ importScripts('/node_modules/idb/lib/idb.js');
 
 const staticCacheName = 'mws-v1';
 const imageCacheName = 'mws-image';
+const externalServerReviews = 'http://localhost:1337/reviews';
 let DBName = 'mws';
 let ReviewsDataStore = 'mws-review';
 let RestaurantDataStore = 'mws-store';
@@ -81,7 +82,7 @@ function sendReviews() {
             if (!cursor) return;
             let review = cursor.value;
 
-            fetch('http://localhost:1337/reviews', {
+            fetch(externalServerReviews, {
                 method: 'POST',
                 body: JSON.stringify(review),
                 headers: {
@@ -164,7 +165,7 @@ function serveRestaurant(event) {
 }
 
 function servePhoto(request) {
-    var storageUrlRep = request.url.replace(/-\w+\.jpg$/, '');
+    let storageUrlRep = request.url.replace(/-\w+\.jpg$/, '');
 
     return caches.open(imageCacheName).then(function(cache) {
         return cache.match(storageUrlRep).then(function (response) {
@@ -179,42 +180,47 @@ function servePhoto(request) {
 }
 
 function serveReviews(event) {
-    var storageId = Number(event.request.url.replace(/..+\/reviews\/.restaurant_id=/, ''));
+    let storageId = Number(event.request.url.replace(/..+\/reviews\/.restaurant_id=/, ''));
 
     if (event.request.method === "GET") {
+
+        //todo if can be refactor to use first fetch and than(IDB)
         return dbPromise.then(function (db) {
-            if(!db.objectStoreNames.contains(ReviewsDataStore)) {
+            if(db.objectStoreNames.contains(ReviewsDataStore)) {
+                console.log('fetchRequestAndAddToIndexDB')
                 return fetchRequestAndAddToIndexDB(event, storageId)
             }
-            let tx = db.transaction(ReviewsDataStore, 'readonly');
-            let store = tx.objectStore(ReviewsDataStore);
-            return store.get(storageId);
+
         }).then(function(reviews) {
-            console.log('Fetched from IDB reviews', reviews)
+            console.log('Reviews from IndexDB', reviews)
+
+            if(reviews instanceof Response) {
+                return reviews
+            }
+
             if (typeof reviews === 'undefined' || !reviews) {
-                console.log('Fetch from network')
-                return fetch(event.request).then(function (response) {
-                    return response.clone().json().then(json => {
-                        addReviewsToIndexedDB(json, storageId);
+                console.log('Fetch from IDB')
+                return dbPromise.then(function (db) {
+                    let tx = db.transaction(ReviewsDataStore, 'readonly');
+                    let store = tx.objectStore(ReviewsDataStore);
+                    return store.get(storageId).then(reviews => {
+
+                        console.log('from IDB', reviews);
+                        let response = new Response(JSON.stringify(reviews.reviews), {
+                            headers: new Headers({
+                                'Content-type': 'application/json',
+                                'Access-Control-Allow-Credentials': 'true'
+                            }),
+                            type: 'cors',
+                            status: 200
+                        });
+                        console.log('from IDB response', response);
                         return response;
-                    })
+                    });
                 });
-            } else {
-                let response = new Response(JSON.stringify(reviews.reviews), {
-                    headers: new Headers({
-                        'Content-type': 'application/json',
-                        'Access-Control-Allow-Credentials': 'true'
-                    }),
-                    type: 'cors',
-                    status: 200
-                });
-                console.log('already in DB');
-                return response;
             }
         });
-
     }
-
 }
 
 function fetchRequestAndAddToIndexDB(event, storageId) {
@@ -223,7 +229,7 @@ function fetchRequestAndAddToIndexDB(event, storageId) {
             addReviewsToIndexedDB(json, storageId);
             return response;
         })
-    });
+    }).catch(error => console.log('Fail to fetch from network: ', error));
 }
 
 function addRestaurantToIndexedDB(jsonData) {
@@ -247,10 +253,7 @@ function addReviewsToIndexedDB(jsonData, storageId) {
     dbPromise.then(function(db) {
         let transaction = db.transaction(ReviewsDataStore, 'readwrite');
         let store = transaction.objectStore(ReviewsDataStore);
-
-        console.log('jsonData', jsonData)
         store.put({'reviews': jsonData, 'id': storageId});
-        return transaction.complete;
     }).then(function() {
         console.log('All data added to DB successfully');
     }).catch(function(err) {
