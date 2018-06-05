@@ -50,13 +50,17 @@ article, aside, canvas, details, figcaption, figure, footer, header, hgroup, men
   min-height: 100%; }
 
 #footer {
-  background-color: #444;
-  color: #aaa;
+  background-color: #282828;
+  color: #e9e9e9;
   font-size: 8pt;
   letter-spacing: 1px;
   padding: 25px;
   text-align: center;
   text-transform: uppercase; }
+
+#footer a {
+  color: #e9e9e9;
+}
 
 /* ====================== Navigation ====================== */
 nav {
@@ -225,7 +229,7 @@ nav h1 a {
   width: 50%; }
 
 #restaurant-name {
-  color: #f18200;
+  color: #c70000;
   font-family: Arial,sans-serif;
   font-size: 20pt;
   font-weight: 200;
@@ -305,7 +309,7 @@ input, label {
 }
 
 #post-comment {
-  background-color: #4CAF50; /* Green */
+  background-color: #005B00; /* Green */
   border: none;
   color: white;
   padding: 5px 15px;
