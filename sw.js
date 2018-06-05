@@ -25,6 +25,7 @@ self.addEventListener('install', function(event) {
                 'js/dbhelper.js',
                 'js/main.js',
                 'js/restaurant_info.js',
+                'node_modules/idb/lib/idb.js',
                 'css/styles.css',
                 'css/styles-medium.css',
                 'css/styles-large.css',
@@ -66,10 +67,10 @@ self.addEventListener('sync', function (event) {
     console.log('going to sync idb with net');
     if (event.tag === 'sync') {
         event.waitUntil(
-            sendReviews().then(() => {
-                console.log('synced');
+            sendReviews().then((response) => {
+                console.log('synced response', response);
             }).catch(err => {
-                console.log(err, 'error syncing');
+                console.log('error syncing', err);
             })
         );
     }
@@ -99,7 +100,7 @@ function sendReviews() {
 
                     });
                 }
-            });
+            }).catch(e => { console.log('Fetch with sync reviews fail: ', e) });
         });
     })
 }
@@ -188,6 +189,7 @@ function serveReviews(event) {
         return dbPromise.then(function (db) {
             if(db.objectStoreNames.contains(ReviewsDataStore)) {
                 console.log('fetchRequestAndAddToIndexDB')
+                event.waitUntil(sendReviews());
                 return fetchRequestAndAddToIndexDB(event, storageId)
             }
 

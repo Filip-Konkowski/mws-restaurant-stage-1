@@ -6,9 +6,9 @@ To install application run commands
  - gulp
  - npm i gulp-autoprefixer
  - npm i gulp-sass
- - instal and run Local Development API Server
+ - install and run Local Development API Server
  
-Application is runnign on localhost:8080
+Application is running on localhost:8080
 
 # Mobile Web Specialist Certification Course
 ---

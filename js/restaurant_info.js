@@ -222,7 +222,7 @@ getParameterByName = (name, url) => {
         return '';
     return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
-//
+
 navigator.serviceWorker.ready.then(function (swRegistration) {
 
     let form = document.querySelector('#submit-review');
@@ -253,14 +253,10 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
 
             return tx.complete;
         }).then(() => {
-
             console.log('data added to outbox')
             return swRegistration.sync.register('sync').then(() => {
                 console.log('Sync registered');
-                // add review to view (for better UX)
-                // const ul = document.getElementById('reviews-list');
-                // review.createdAt = new Date();
-                // ul.appendChild(createReviewHTML(review));
+                location.reload();
             });
         }).catch(error => console.error(error));
 
