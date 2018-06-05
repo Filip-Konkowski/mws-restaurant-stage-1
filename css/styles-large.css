@@ -205,6 +205,23 @@ nav h1 a {
   right: 0;
   bottom: 0; }
 
+.favorite-button {
+  padding: 10px;
+  display: inline;
+  border-radius: 2px;
+  font-family: Arial,sans-serif;
+  border: 0;
+  margin: 0 10px;
+  background: red;
+  font-size: 15px;
+  line-height: 15px;
+  color: white;
+  width: auto;
+  height: auto;
+  box-sizing: content-box;
+  white-space:nowrap;
+}
+
 /* ====================== Restaurant Details ====================== */
 .inside header {
   position: fixed;
