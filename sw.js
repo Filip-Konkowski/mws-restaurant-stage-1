@@ -195,7 +195,6 @@ function serveRestaurant(event) {
             if (!resteurants.length) {
                 return fetch(event.request).then(function (response) {
                     return response.clone().json().then(json => {
-                        console.log('event respond fetch from net');
                         addRestaurantToIndexedDB(json);
                         return response;
                     })
@@ -209,7 +208,6 @@ function serveRestaurant(event) {
                     type: 'cors',
                     status: 200
                 });
-                console.log('already in DB');
                 return response;
             }
         }
@@ -239,26 +237,21 @@ function serveReviews(event) {
         //todo if can be refactor to use first fetch and than(IDB)
         return dbPromise.then(function (db) {
             if(db.objectStoreNames.contains(ReviewsDataStore)) {
-                console.log('fetchRequestAndAddToIndexDB')
                 event.waitUntil(sendReviews());
                 return fetchRequestAndAddToIndexDB(event, storageId)
             }
 
         }).then(function(reviews) {
-            console.log('Reviews from IndexDB', reviews)
-
             if(reviews instanceof Response) {
                 return reviews
             }
 
             if (typeof reviews === 'undefined' || !reviews) {
-                console.log('Fetch from IDB')
                 return dbPromise.then(function (db) {
                     let tx = db.transaction(ReviewsDataStore, 'readonly');
                     let store = tx.objectStore(ReviewsDataStore);
                     return store.get(storageId).then(reviews => {
 
-                        console.log('from IDB', reviews);
                         let response = new Response(JSON.stringify(reviews.reviews), {
                             headers: new Headers({
                                 'Content-type': 'application/json',
@@ -267,7 +260,6 @@ function serveReviews(event) {
                             type: 'cors',
                             status: 200
                         });
-                        console.log('from IDB response', response);
                         return response;
                     });
                 });
@@ -331,7 +323,6 @@ function initDB() {
     });
 
     dbPromise = idb.open(DBName, 1, function (upgradeDb) {
-        console.log('making DB Store');
         if (!upgradeDb.objectStoreNames.contains('mws-review')) {
             console.log('createObjectStore ReviewsDataStore');
             upgradeDb.createObjectStore(ReviewsDataStore, { keyPath: 'id' })

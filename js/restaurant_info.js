@@ -106,7 +106,6 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
 
     const favoriteButton = document.getElementById('favorite-button')
     favoriteButton.dataset.opinion = restaurant.is_favorite
-    console.log('res', restaurant)
     if(restaurant.is_favorite == 'true') {
         favoriteButton.style.backgroundColor = '#c70000';
         favoriteButton.innerHTML = 'Your favorite';
@@ -240,8 +239,6 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
     let form = document.querySelector('#submit-review');
     form.addEventListener('submit', function (event) {
         event.preventDefault();
-        console.log('submit clicked');
-
         let dataReview = {
             "restaurant_id": self.restaurant.id,
             "name": document.getElementById('reviewer-name').value,
@@ -251,29 +248,20 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
 
         let outbox = 'outbox';
         idb.open('mws-outbox', 1).then(db => {
-            console.log('db', db)
             let tx = db.transaction(outbox, "readwrite");
             let objectStore = tx.objectStore(outbox);
-            console.log('post objectStore', objectStore);
             objectStore.add(dataReview);
 
             return tx.complete;
         }).then(() => {
-            console.log('data added to outbox')
             return swRegistration.sync.register('sync').then(() => {
-                console.log('Sync registered');
                 location.reload();
             });
         }).catch(error => console.error(error));
-
-
     })
-
 
     let favorite = document.querySelector('#favorite-button');
     favorite.addEventListener('click', function (event) {
-
-        console.log('favorite clicked', favorite);
         let opinion = JSON.parse(favorite.dataset.opinion);
         opinion = !opinion;
         let favoriteSelected = {
@@ -281,21 +269,15 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
             'opinion': opinion
         };
 
-        console.log('you favor favoriteSelected', favoriteSelected)
         let outboxFavorite = 'outbox-favorite';
         idb.open('mws-outbox', 1).then(db => {
-            console.log('db', db)
             let tx = db.transaction(outboxFavorite, "readwrite");
             let objectStore = tx.objectStore(outboxFavorite);
-            console.log('post objectStore', objectStore);
             objectStore.add(favoriteSelected);
 
             return tx.complete;
         }).then(() => {
             return swRegistration.sync.register('sync-favorite').then(() => {
-                console.log('Sync favorite dataset.opinion', favorite.dataset.opinion);
-                console.log('type dataset.opinion', typeof favorite.dataset.opinion);
-                //todo chenge color of button depends on opinion, best to fetch it from network or IDB
                 if(favorite.dataset.opinion !== "true") {
                     favorite.style.backgroundColor = '#c70000';
                     favorite.innerHTML = 'Your favorite';
@@ -305,11 +287,8 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
                     favorite.innerHTML = 'Save as favorite';
                     favorite.dataset.opinion = opinion.toString();
                 }
-
             });
         }).catch(error => console.error(error));
-
-
     })
 });
 
