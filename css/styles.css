@@ -191,20 +191,6 @@ nav h1 a {
   text-decoration: none;
   text-transform: uppercase; }
 
-#restaurants-list li span a {
-  background-color: #007b12;
-  color: #fff;
-  cursor: pointer;
-  padding: 10px 30px;
-}
-
-#restaurants-list li span a:hover {
-  background-color: #e600ff;
-  color: #333;
-}
-/* XOMISSE END CSS FOR BUTTON */
-
-
 /* ====================== Restaurant Details ====================== */
 .inside header {
   position: fixed;
@@ -331,4 +317,16 @@ input, label {
   background-color: white;
   color: black;
   border: 2px solid #4CAF50;
+}
+
+#favorite-button {
+  background-color: #007b12;
+  color: #fff;
+  cursor: pointer;
+  padding: 5px 28px;
+}
+
+#favorite-button:hover {
+  background-color: #e600ff;
+  color: #333;
 }

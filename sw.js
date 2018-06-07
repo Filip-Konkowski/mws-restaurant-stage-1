@@ -74,7 +74,58 @@ self.addEventListener('sync', function (event) {
             })
         );
     }
+
+    if (event.tag === 'sync-favorite') {
+        event.waitUntil(
+            sendFavorite().then((restaurant) => {
+                console.log('synced response', restaurant);
+            }).catch(err => {
+                console.log('error syncing', err);
+            })
+        );
+    }
 });
+
+function sendFavorite() {
+    console.log('sendFavorite');
+    return idb.open(OutboxDataStore, 1).then(db => {
+        let tx = db.transaction('outbox-favorite', 'readonly');
+        return tx.objectStore('outbox-favorite').openCursor().then(function cursorIterate(cursor) {
+            if (!cursor) return;
+            let favorite = cursor.value;
+            console.log('iterating over cursor', cursor.value)
+            console.log("http://localhost:1337/restaurants/" + favorite.restaurantId + "/?is_favorite=" + favorite.opinion)
+//todo looks like I am not sending that request
+            return fetch("http://localhost:1337/restaurants/" + favorite.restaurantId + "/?is_favorite=" + favorite.opinion, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                console.log('favorite response', response)
+                return response.json();
+            }).then(data => {
+                if (data) {
+                    console.log('data from fetch request o favorite', data)
+
+                    idb.open('mws', 1).then(db => {
+                        let tx = db.transaction(RestaurantDataStore, 'readwrite');
+                        tx.objectStore(RestaurantDataStore).put(data)
+                    });
+
+                    idb.open(OutboxDataStore, 1).then(db => {
+                        let tx = db.transaction('outbox-favorite', 'readwrite');
+                        tx.objectStore('outbox-favorite').delete(cursor.key).then(sendFavorite);
+
+                    });
+                    return data
+
+                }
+            }).catch(e => { console.log('Fetch with sync favorite fail: ', e) });
+        });
+    })
+}
 
 function sendReviews() {
     return idb.open(OutboxDataStore, 1).then(db => {
@@ -266,6 +317,18 @@ function addReviewsToIndexedDB(jsonData, storageId) {
 
 function initDB() {
     console.log('initDB')
+
+    idb.open('mws-outbox', 1, function(dbUpdate) {
+        if (!dbUpdate.objectStoreNames.contains('outbox')) {
+            console.log('createObjectStore outbox');
+            dbUpdate.createObjectStore('outbox', { autoIncrement: true })
+        }
+        if (!dbUpdate.objectStoreNames.contains('outbox-favorite')) {
+            console.log('createObjectStore outbox-favorite');
+            dbUpdate.createObjectStore('outbox-favorite', { autoIncrement: true, keyPath: 'id'})
+        }
+
+    });
 
     dbPromise = idb.open(DBName, 1, function (upgradeDb) {
         console.log('making DB Store');

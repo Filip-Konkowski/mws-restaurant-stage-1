@@ -103,14 +103,26 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     if (restaurant.operating_hours) {
         fillRestaurantHoursHTML(restaurant.operating_hours);
     }
+
+    const favoriteButton = document.getElementById('favorite-button')
+    favoriteButton.dataset.opinion = restaurant.is_favorite
+    console.log('res', restaurant)
+    if(restaurant.is_favorite == 'true') {
+        favoriteButton.style.backgroundColor = '#c70000';
+        favoriteButton.innerHTML = 'Your favorite';
+        favoriteButton.dataset.opinion = restaurant.is_favorite;
+    } else {
+        favoriteButton.style.backgroundColor = '#005b00';
+        favoriteButton.innerHTML = 'Save as favorite';
+        favoriteButton.dataset.opinion = restaurant.is_favorite;
+    }
+
     // fill reviews
     fetch(URL_localhost + 'reviews/?restaurant_id=' + restaurant.id,
         {
             mathod: 'GET'
         }).then(response => {
-
             response.json().then(data => {
-                console.log('response.json', data)
                 data.forEach(item => {
                     let date = new Date(item.createdAt);
                     item.createdAt = date.toUTCString()
@@ -238,13 +250,7 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
         };
 
         let outbox = 'outbox';
-        idb.open('mws-outbox', 1, function(dbUpdate) {
-            console.log('updateDB', dbUpdate);
-            if (!dbUpdate.objectStoreNames.contains(outbox)) {
-                console.log('createObjectStore outbox');
-                dbUpdate.createObjectStore(outbox, { autoIncrement: true })
-            }
-        }).then(db => {
+        idb.open('mws-outbox', 1).then(db => {
             console.log('db', db)
             let tx = db.transaction(outbox, "readwrite");
             let objectStore = tx.objectStore(outbox);
@@ -257,6 +263,49 @@ navigator.serviceWorker.ready.then(function (swRegistration) {
             return swRegistration.sync.register('sync').then(() => {
                 console.log('Sync registered');
                 location.reload();
+            });
+        }).catch(error => console.error(error));
+
+
+    })
+
+
+    let favorite = document.querySelector('#favorite-button');
+    favorite.addEventListener('click', function (event) {
+
+        console.log('favorite clicked', favorite);
+        let opinion = JSON.parse(favorite.dataset.opinion);
+        opinion = !opinion;
+        let favoriteSelected = {
+            'restaurantId': self.restaurant.id,
+            'opinion': opinion
+        };
+
+        console.log('you favor favoriteSelected', favoriteSelected)
+        let outboxFavorite = 'outbox-favorite';
+        idb.open('mws-outbox', 1).then(db => {
+            console.log('db', db)
+            let tx = db.transaction(outboxFavorite, "readwrite");
+            let objectStore = tx.objectStore(outboxFavorite);
+            console.log('post objectStore', objectStore);
+            objectStore.add(favoriteSelected);
+
+            return tx.complete;
+        }).then(() => {
+            return swRegistration.sync.register('sync-favorite').then(() => {
+                console.log('Sync favorite dataset.opinion', favorite.dataset.opinion);
+                console.log('type dataset.opinion', typeof favorite.dataset.opinion);
+                //todo chenge color of button depends on opinion, best to fetch it from network or IDB
+                if(favorite.dataset.opinion !== "true") {
+                    favorite.style.backgroundColor = '#c70000';
+                    favorite.innerHTML = 'Your favorite';
+                    favorite.dataset.opinion = opinion.toString();
+                } else {
+                    favorite.style.backgroundColor = '#005b00';
+                    favorite.innerHTML = 'Save as favorite';
+                    favorite.dataset.opinion = opinion.toString();
+                }
+
             });
         }).catch(error => console.error(error));
 

@@ -205,22 +205,6 @@ nav h1 a {
   right: 0;
   bottom: 0; }
 
-.favorite-button {
-  padding: 10px;
-  display: inline;
-  border-radius: 2px;
-  font-family: Arial,sans-serif;
-  border: 0;
-  margin: 0 10px;
-  background: red;
-  font-size: 15px;
-  line-height: 15px;
-  color: white;
-  width: auto;
-  height: auto;
-  box-sizing: content-box;
-  white-space:nowrap;
-}
 
 /* ====================== Restaurant Details ====================== */
 .inside header {
@@ -349,4 +333,17 @@ input, label {
   background-color: white;
   color: black;
   border: 2px solid #4CAF50;
+}
+
+
+#favorite-button {
+  background-color: #007b12;
+  color: #fff;
+  cursor: pointer;
+  padding: 5px 28px;
+}
+
+#favorite-button:hover {
+  background-color: #e600ff;
+  color: #333;
 }
